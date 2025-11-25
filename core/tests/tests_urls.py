@@ -2,12 +2,13 @@ from django.test import SimpleTestCase
 from django.urls import reverse, resolve
 from core.views import CategoriaListView
 
+class CategoriaURLPrintTest(SimpleTestCase):
 
-class TestCategoriaURLs(SimpleTestCase):
-    def test_url_categorias_resolve(self):
+    def test_url_categorias(self):
         url = reverse("lista_categorias")
         resolved = resolve(url)
-        self.assertEqual(
-            resolved.func.view_class,
-            CategoriaListView
-        )
+
+        print("\n🔵 URL testada:", url)
+        print("🔵 View encontrada:", resolved.func.view_class.__name__)
+
+        self.assertEqual(resolved.func.view_class, CategoriaListView)
