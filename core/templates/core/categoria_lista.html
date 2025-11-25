@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+
+{% block title %}Lista de Categorias{% endblock %}
+
+{% block content %}
+    <h2>📚 Categorias de Ingredientes</h2>
+    <p>Para adicionar ou editar categorias, acesse a área administrativa do Django (Admin).</p>
+
+    {% if categorias %}
+        <ul>
+            {% for categoria in categorias %}
+                <li>{{ categoria.nome }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nenhuma categoria cadastrada. Acesse o Admin para começar!</p>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'lista_ingredientes' %}" class="btn">Voltar para Ingredientes</a>
+{% endblock %}
