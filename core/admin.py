@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Categoria, Ingrediente, Receita, Usuario
+from .models import Categoria, Ingrediente, Receita, Usuario, Perfil
+
+@admin.register(Perfil)
+class PerfilAdmin(admin.ModelAdmin):
+    list_display = ('tipo',)
+    search_fields = ('tipo',)
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
