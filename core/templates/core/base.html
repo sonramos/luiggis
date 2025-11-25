@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Luiggis AI Food Manager{% endblock %}</title>
+    <style>
+        /* CSS Básico para Legibilidade */
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .btn { padding: 5px 10px; margin: 2px; text-decoration: none; border: 1px solid #000; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Luiggis AI Food Manager</h1>
+        <hr>
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

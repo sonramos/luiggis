@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Editar Ingrediente{% else %}Adicionar Ingrediente{% endif %}
+{% endblock %}
+
+{% block content %}
+    <h2>
+        {% if object %}✏️ Editar Ingrediente: {{ object.nome }}
+        {% else %}➕ Adicionar Novo Ingrediente
+        {% endif %}
+    </h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} 
+        <button type="submit" class="btn">Salvar</button>
+        <a href="{% url 'lista_ingredientes' %}" class="btn">Cancelar</a>
+    </form>
+{% endblock %}

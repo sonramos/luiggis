@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Ingredientes{% endblock %}
+
+{% block content %}
+    <h2>🍽️ Gestão de Ingredientes</h2>
+    <a href="{% url 'adicionar_ingrediente' %}" class="btn">➕ Adicionar Novo Ingrediente</a>
+    <a href="{% url 'lista_categorias' %}" class="btn">Gerenciar Categorias</a>
+    <br><br>
+
+    {% if ingredientes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Caloria (por porção)</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ingrediente in ingredientes %}
+                <tr>
+                    <td>{{ ingrediente.nome }}</td>
+                    <td>{{ ingrediente.categoria|default:"Não Definida" }}</td>
+                    <td>{{ ingrediente.caloria }}</td>
+                    <td>
+                        <a href="{% url 'editar_ingrediente' ingrediente.pk %}" class="btn">Editar</a>
+                        <a href="{% url 'excluir_ingrediente' ingrediente.pk %}" class="btn">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum ingrediente cadastrado. Comece adicionando um!</p>
+    {% endif %}
+{% endblock %}
