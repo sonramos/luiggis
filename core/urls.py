@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Landing Page
+    path('', views.LandingPageView.as_view(), name='landing'),
+    
     # Categoria (Opcional, mas útil para o CRUD completo)
     path('categorias/', views.CategoriaListView.as_view(), name='lista_categorias'),
     
@@ -16,4 +19,11 @@ urlpatterns = [
     
     # Excluir Ingrediente (Delete)
     path('ingredientes/excluir/<int:pk>/', views.IngredienteDeleteView.as_view(), name='excluir_ingrediente'),
+
+    # Receitas
+    path('receitas/', views.ReceitaListView.as_view(), name='lista_receitas'),
+    path('receitas/<int:pk>/', views.ReceitaDetailView.as_view(), name='detalhes_receita'),
+    
+    # Geração de Receita via IA
+    path('receitas/gerar/', views.GerarReceitaIAView.as_view(), name='receita_geracao_ia'),
 ]

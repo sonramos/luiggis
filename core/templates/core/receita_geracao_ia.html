@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+
+{% block title %}Gerar Receita com IA{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0">✨ Gerar Receita com IA</h2>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Descreva os ingredientes que você tem, suas restrições ou o tipo de prato desejado. A IA criará uma receita completa para você!</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.prompt_geracao }}
+                            <small class="form-text text-muted d-block mt-2">
+                                Ex: "Tenho frango, batata e queijo. Quero uma receita rápida e sem glúten."
+                            </small>
+                        </div>
+
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <p class="mb-0"><strong>{{ field.label }}:</strong> {{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">🚀 Gerar Receita</button>
+                            <a href="{% url 'lista_ingredientes' %}" class="btn btn-secondary btn-lg">❌ Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📋 Ingredientes Disponíveis</h5>
+                </div>
+                <div class="card-body">
+                    {% if ingredientes_disponiveis %}
+                        <div class="badge-list">
+                            {% for ingrediente in ingredientes_disponiveis %}
+                                <span class="badge bg-secondary me-2 mb-2">{{ ingrediente }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Nenhum ingrediente cadastrado ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

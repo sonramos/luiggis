@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+
+{% block title %}Luiggis' - Seu Chef IA{% endblock %}
+
+{% block content %}
+<div class="row align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="col-lg-8 text-center">
+        <!-- Hero Section -->
+        <div class="mb-5">
+            <h1 class="display-3 fw-bold mb-3">🍳 Bem-vindo ao Luiggis'</h1>
+            <p class="lead text-muted mb-4">
+                Seu assistente de culinária inteligente. Descubra receitas personalizadas com IA!
+            </p>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📦 Ingredientes</h5>
+                        <p class="display-5 fw-bold text-primary">{{ total_ingredientes }}</p>
+                        <p class="text-muted">Ingredientes cadastrados</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">🍳 Receitas</h5>
+                        <p class="display-5 fw-bold text-success">{{ total_receitas }}</p>
+                        <p class="text-muted">Receitas criadas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">✨ IA Geradas</h5>
+                        <p class="display-5 fw-bold text-warning">{{ total_receitas_ia }}</p>
+                        <p class="text-muted">Receitas geradas por IA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <a href="{% url 'receita_geracao_ia' %}" class="btn btn-success btn-lg">
+                ✨ Gerar Nova Receita
+            </a>
+            <a href="{% url 'lista_receitas' %}" class="btn btn-outline-primary btn-lg">
+                🍳 Ver Minhas Receitas
+            </a>
+            <a href="{% url 'lista_ingredientes' %}" class="btn btn-outline-info btn-lg">
+                📦 Gerenciar Ingredientes
+            </a>
+        </div>
+
+        <!-- Sobre a Aplicação -->
+        <div class="mt-5 pt-5 border-top">
+            <h3 class="mb-4">Como Funciona?</h3>
+            <div class="row text-start">
+                <div class="col-md-4 mb-3">
+                    <div class="text-center mb-3">
+                        <i class="display-4 text-primary">1️⃣</i>
+                    </div>
+                    <h5>Descreva</h5>
+                    <p class="text-muted">Conte à IA que ingredientes você tem e o tipo de prato que quer</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center mb-3">
+                        <i class="display-4 text-success">2️⃣</i>
+                    </div>
+                    <h5>Gere</h5>
+                    <p class="text-muted">Clique em "Gerar Receita" e deixe a IA criar uma receita única para você</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center mb-3">
+                        <i class="display-4 text-warning">3️⃣</i>
+                    </div>
+                    <h5>Cozinhe</h5>
+                    <p class="text-muted">Siga as instruções geradas e aproveite sua refeição deliciosa!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
