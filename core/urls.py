@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
+from .forms import CustomAuthenticationForm
 
 urlpatterns = [
     # Landing Page
@@ -26,4 +28,9 @@ urlpatterns = [
     
     # Geração de Receita via IA
     path('receitas/gerar/', views.GerarReceitaIAView.as_view(), name='receita_geracao_ia'),
+
+    # Autenticação
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='core/login.html', authentication_form=CustomAuthenticationForm), name='login'),
+    path('accounts/logout/', views.logout_view, name='logout'),
+    path('accounts/register/', views.RegisterView.as_view(), name='register'),
 ]

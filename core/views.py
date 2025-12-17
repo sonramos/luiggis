@@ -10,6 +10,12 @@ from django.views.generic import (
 )
 from .models import Ingrediente, Categoria, Receita # Importe os Models
 from .forms import IngredienteForm, ReceitaIAForm # Importe os Forms
+from .forms import UserRegistrationForm
+from django.contrib.auth import login
+from django.views.generic import FormView
+from django.contrib.auth import logout
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from google import genai 
 import os
 
@@ -148,3 +154,25 @@ class GerarReceitaIAView(CreateView):
     def get_success_url(self):
         """Redireciona para a página da receita criada para exibir o resultado."""
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
+
+
+class RegisterView(FormView):
+    """Página de cadastro de usuário."""
+    template_name = 'core/register.html'
+    form_class = UserRegistrationForm
+    success_url = reverse_lazy('landing')
+
+    def form_valid(self, form):
+        user = form.save()
+        # Autentica e faz login automático
+        login(self.request, user)
+        return super().form_valid(form)
+
+
+def logout_view(request):
+    """Faz logout do usuário e redireciona para a landing.
+
+    Aceita GET e POST para facilitar uso a partir de um link simples na navbar.
+    """
+    logout(request)
+    return redirect('landing')
