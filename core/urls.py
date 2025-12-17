@@ -33,4 +33,7 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(template_name='core/login.html', authentication_form=CustomAuthenticationForm), name='login'),
     path('accounts/logout/', views.logout_view, name='logout'),
     path('accounts/register/', views.RegisterView.as_view(), name='register'),
+    # Perfil do usuário
+    path('accounts/profile/', views.PerfilDetailView.as_view(), name='perfil'),
+    path('accounts/profile/editar/', views.PerfilUpdateView.as_view(), name='perfil_editar'),
 ]

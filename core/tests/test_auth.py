@@ -369,3 +369,5 @@ class UsuarioModelTests(PerfilSetupMixin, TestCase):
         UsuarioRestricao.objects.create(usuario=user, restricao_alimentar=restricao)
         
         self.assertIn(restricao, user.restricoes.all())
+
+

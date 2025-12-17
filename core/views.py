@@ -8,8 +8,10 @@ from django.views.generic import (
     UpdateView, 
     DeleteView
 )
-from .models import Ingrediente, Categoria, Receita # Importe os Models
-from .forms import IngredienteForm, ReceitaIAForm # Importe os Forms
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from .models import Ingrediente, Categoria, Receita, Usuario, Perfil # Importe os Models
+from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm # Importe os Forms
 from .forms import UserRegistrationForm
 from django.contrib.auth import login
 from django.views.generic import FormView
@@ -163,10 +165,53 @@ class RegisterView(FormView):
     success_url = reverse_lazy('landing')
 
     def form_valid(self, form):
-        user = form.save()
+        # Não permitimos escolha de `perfil` no cadastro público.
+        # Atribuímos o perfil padrão 'Usuário' automaticamente.
+        user = form.save(commit=False)
+        try:
+            perfil_default = Perfil.objects.get(tipo__iexact='usuario')
+        except Perfil.DoesNotExist:
+            perfil_default = Perfil.objects.first()
+
+        if perfil_default:
+            user.perfil = perfil_default
+
+        user.save()
         # Autentica e faz login automático
         login(self.request, user)
         return super().form_valid(form)
+
+
+class PerfilDetailView(LoginRequiredMixin, TemplateView):
+    """Exibe os dados de perfil do usuário logado."""
+    template_name = 'core/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['user'] = user
+        # inclui restrições e perfil
+        context['restricoes'] = user.restricoes.all()
+        context['perfil'] = user.perfil
+        return context
+
+
+class PerfilUpdateView(LoginRequiredMixin, UpdateView):
+    """Permite que o usuário edite seu `perfil` e `restricoes`."""
+    model = Usuario
+    form_class = PerfilUsuarioForm
+    template_name = 'core/profile_form.html'
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy('perfil')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Perfil atualizado com sucesso.')
+        return response
 
 
 def logout_view(request):
