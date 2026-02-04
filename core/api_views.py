@@ -101,7 +101,7 @@ class IngredienteViewSet(viewsets.ModelViewSet):
     PUT/PATCH /api/ingredientes/{id}/ - Atualizar ingrediente (requer autenticação)
     DELETE /api/ingredientes/{id}/ - Deletar ingrediente (requer autenticação)
     
-    Filtros disponíveis: categoria, nome, caloria
+    Filtros disponíveis: categoria, nome, caloria, exclude_restricoes
     Busca: nome
     Ordenação: nome, caloria, id
     """
@@ -112,6 +112,27 @@ class IngredienteViewSet(viewsets.ModelViewSet):
     search_fields = ['nome']
     ordering_fields = ['nome', 'caloria', 'id']
     ordering = ['nome']
+    
+    def get_queryset(self):
+        """
+        Filtra ingredientes excluindo aqueles que têm restrições do usuário.
+        Parâmetro: ?exclude_restricoes=user_id
+        """
+        queryset = Ingrediente.objects.select_related('categoria').all()
+        exclude_restricoes = self.request.query_params.get('exclude_restricoes', None)
+        
+        if exclude_restricoes and self.request.user.is_authenticated:
+            # Se parâmetro foi passado, filtra por ID do usuário
+            try:
+                user_id = int(exclude_restricoes)
+                user = Usuario.objects.get(id=user_id)
+                user_restricoes = user.restricoes.all()
+                # Excluir ingredientes que têm alguma restrição do usuário
+                queryset = queryset.exclude(restricoes__in=user_restricoes).distinct()
+            except (ValueError, Usuario.DoesNotExist):
+                pass
+        
+        return queryset
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

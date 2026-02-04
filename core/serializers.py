@@ -41,10 +41,14 @@ class IngredienteSerializer(serializers.ModelSerializer):
         source='categoria.nome',
         read_only=True
     )
+    porcao_display = serializers.CharField(
+        source='get_porcao_display',
+        read_only=True
+    )
     
     class Meta:
         model = Ingrediente
-        fields = ['id', 'nome', 'categoria', 'categoria_nome', 'caloria']
+        fields = ['id', 'nome', 'categoria', 'categoria_nome', 'caloria', 'porcao_display']
         read_only_fields = ['id']
 
 
@@ -55,10 +59,15 @@ class IngredienteDetailSerializer(serializers.ModelSerializer):
         source='receitas.count',
         read_only=True
     )
+    porcao_display = serializers.CharField(
+        source='get_porcao_display',
+        read_only=True
+    )
+    restricoes = RestricaoAlimentarSerializer(many=True, read_only=True)
     
     class Meta:
         model = Ingrediente
-        fields = ['id', 'nome', 'categoria', 'caloria', 'receitas_count']
+        fields = ['id', 'nome', 'categoria', 'caloria', 'porcao_display', 'receitas_count', 'restricoes']
         read_only_fields = ['id']
 
 
@@ -113,6 +122,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
         read_only=True
     )
     restricoes = RestricaoAlimentarSerializer(many=True, read_only=True)
+    restricoes_ids = serializers.PrimaryKeyRelatedField(
+        queryset=RestricaoAlimentar.objects.all(),
+        many=True,
+        source='restricoes',
+        write_only=True,
+        required=False
+    )
     receitas_count = serializers.IntegerField(
         source='receitas.count',
         read_only=True
@@ -122,7 +138,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'perfil', 'perfil_tipo', 'restricoes', 'receitas_count',
+            'perfil', 'perfil_tipo', 'restricoes', 'restricoes_ids', 'receitas_count',
             'is_active', 'date_joined'
         ]
         read_only_fields = ['id', 'date_joined', 'receitas_count']
@@ -203,13 +219,21 @@ class DietaSerializer(serializers.ModelSerializer):
         read_only=True
     )
     ingredientes_restritos = IngredienteSerializer(many=True, read_only=True)
+    restricoes = RestricaoAlimentarSerializer(many=True, read_only=True)
+    restricoes_ids = serializers.PrimaryKeyRelatedField(
+        queryset=RestricaoAlimentar.objects.all(),
+        many=True,
+        source='restricoes',
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = Dieta
         fields = [
             'id', 'min_refeicao', 'max_refeicao', 'total_caloria',
             'link', 'is_active', 'usuario', 'usuario_username',
-            'ingredientes_restritos'
+            'ingredientes_restritos', 'restricoes', 'restricoes_ids'
         ]
         read_only_fields = ['id']
 
@@ -225,11 +249,16 @@ class RefeicaoSerializer(serializers.ModelSerializer):
         read_only=True
     )
     receitas = ReceitaSerializer(many=True, read_only=True)
+    total_calorias = serializers.SerializerMethodField()
+    
+    def get_total_calorias(self, obj):
+        """Calcula o total de calorias da refeição."""
+        return obj.get_total_calorias()
     
     class Meta:
         model = Refeicao
         fields = [
             'id', 'date', 'tipo_refeicao', 'tipo_refeicao_display',
-            'usuario', 'usuario_username', 'receitas'
+            'usuario', 'usuario_username', 'receitas', 'total_calorias'
         ]
         read_only_fields = ['id']

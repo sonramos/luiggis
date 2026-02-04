@@ -49,11 +49,20 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_ingredientes' %}">Ingredientes</a>
                     </li>
+                    <!-- AUTORIZACAO: mostra links de login e register quando usuário não está autenticado -->
+                    {% if request.user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_receitas' %}">Receitas</a>
                     </li>
-                    <!-- AUTORIZACAO: mostra links de perfil e logout quando usuário autenticado -->
-                    {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_refeicoes' %}">Minhas Refeições</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_dietas' %}">Dieta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_agendas' %}">Agenda</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'perfil' %}">Olá, {{ request.user.username }}</a>
                     </li>
@@ -75,6 +84,26 @@
 
     <!-- Conteúdo Principal -->
     <main class="container">
+        {% if messages %}
+        <div class="row mt-3">
+            <div class="col-12">
+                {% for message in messages %}
+                    {% if message.tags %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         {% block content %}
         {% endblock %}
     </main>

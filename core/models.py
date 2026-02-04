@@ -28,6 +28,14 @@ class RestricaoAlimentar(models.Model):
     tipo = models.CharField(max_length=30)
     descricao = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
+    
+    # Relação N:M com Categoria - categorias que essa restrição afeta
+    categorias_restritas = models.ManyToManyField(
+        'Categoria',
+        blank=True,
+        related_name='restricoes_alimentares',
+        help_text='Categorias de ingredientes que esta restrição proíbe'
+    )
 
     class Meta:
         verbose_name = "Restrição Alimentar"
@@ -68,6 +76,26 @@ class Ingrediente(models.Model):
     caloria = models.IntegerField(
         help_text="Calorias por porção (ex: 100g)."
     )
+    
+    porcao_padrao_gramas = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Porção padrão em gramas (ex: 120g de frango)."
+    )
+    
+    porcao_padrao_ml = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Porção padrão em mililitros (ex: 200ml de leite)."
+    )
+    
+    # Relação N:M com RestricaoAlimentar
+    restricoes = models.ManyToManyField(
+        RestricaoAlimentar,
+        blank=True,
+        related_name='ingredientes_restritos',
+        help_text='Restrições alimentares associadas a este ingrediente'
+    )
 
     class Meta:
         verbose_name = "Ingrediente"
@@ -75,6 +103,14 @@ class Ingrediente(models.Model):
 
     def __str__(self):
         return self.nome
+    
+    def get_porcao_display(self):
+        """Retorna a porção padrão em formato legível."""
+        if self.porcao_padrao_gramas:
+            return f"{self.porcao_padrao_gramas}g"
+        elif self.porcao_padrao_ml:
+            return f"{self.porcao_padrao_ml}ml"
+        return "N/A"
 
 class Receita(models.Model):
     """
@@ -198,6 +234,8 @@ class AgendaAlimentar(models.Model):
     # id é criado automaticamente
     is_google_agenda = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     # FK_USUARIO_id -> Relação 1:N com USUARIO (ON DELETE CASCADE)
     usuario = models.ForeignKey(
@@ -238,6 +276,14 @@ class Dieta(models.Model):
         through='IngredienteDieta',
         related_name='dietas'
     )
+    
+    # Relação N:M com RestricaoAlimentar (restrições da dieta)
+    restricoes = models.ManyToManyField(
+        RestricaoAlimentar,
+        blank=True,
+        related_name='dietas',
+        help_text='Restrições alimentares desta dieta'
+    )
 
     class Meta:
         verbose_name = "Dieta"
@@ -245,6 +291,24 @@ class Dieta(models.Model):
 
     def __str__(self):
         return f"Dieta de {self.usuario.username} ({self.total_caloria} cal)"
+    
+    def get_ingredientes_permitidos(self):
+        """
+        Retorna os ingredientes permitidos para esta dieta.
+        Filtra os ingredientes cujas categorias NÃO estão restritas por nenhuma das restrições da dieta.
+        """
+        from django.db.models import Q
+        from django.db.models import Exists, OuterRef
+        
+        # Obter todas as categorias restritas pela dieta
+        categorias_restritas = Categoria.objects.filter(
+            restricoes_alimentares__in=self.restricoes.all()
+        ).distinct()
+        
+        # Retornar ingredientes que NÃO estão em categorias restritas
+        return Ingrediente.objects.exclude(
+            categoria__in=categorias_restritas
+        )
 
 class Refeicao(models.Model):
     """
@@ -308,7 +372,27 @@ class Refeicao(models.Model):
 
     def __str__(self):
         return f"Refeição de {self.usuario.username} em {self.date}"
-
+    
+    def clean(self):
+        """Validação customizada do modelo."""
+        from django.core.exceptions import ValidationError
+        super().clean()
+        
+        # Verificar se a refeição tem receitas
+        # Nota: Isso só funciona para refeições já salvas, pois M2M só funciona após save()
+        if self.pk and self.receitas.count() == 0:
+            raise ValidationError('Uma refeição deve ter pelo menos uma receita.')
+    
+    def get_total_calorias(self):
+        """Calcula o total de calorias da refeição a partir de seus ingredientes."""
+        from django.db.models import Sum, F
+        
+        # Buscar todas as receitas da refeição e suas calorias
+        total_receitas = self.receitas.aggregate(
+            total_calorias=Sum('ingredientes__caloria')
+        ).get('total_calorias', 0) or 0
+        
+        return int(total_receitas) if total_receitas else 0
 # --- Modelos de Junção (Many-to-Many com Campos Extras) ---
 # Tabelas N:M explícitas
 
@@ -489,8 +573,25 @@ class IngredienteListaCompra(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    
+    # Quantidade necessária do ingrediente
+    quantidade_gramas = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Quantidade em gramas"
+    )
+    
+    quantidade_ml = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Quantidade em mililitros"
+    )
 
     class Meta:
         unique_together = ('ingrediente', 'lista_de_compra')
         verbose_name = "Ingrediente em Lista de Compra"
         verbose_name_plural = "Ingredientes em Listas de Compra"
+    
+    def __str__(self):
+        qty = f"{self.quantidade_gramas}g" if self.quantidade_gramas else (f"{self.quantidade_ml}ml" if self.quantidade_ml else "")
+        return f"{self.ingrediente.nome} ({qty})"

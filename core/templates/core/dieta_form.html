@@ -1,0 +1,112 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% if form.instance.id %}Editar Dieta{% else %}Nova Dieta{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    {% if form.instance.id %}
+                        ✏️ Editar Dieta #{{ form.instance.id }}
+                    {% else %}
+                        🥗 Nova Dieta
+                    {% endif %}
+                </h2>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Erros encontrados:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.min_refeicao.id_for_label }}" class="form-label">{{ form.min_refeicao.label }}</label>
+                        {{ form.min_refeicao }}
+                        {% if form.min_refeicao.errors %}
+                            <div class="invalid-feedback d-block">{{ form.min_refeicao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.max_refeicao.id_for_label }}" class="form-label">{{ form.max_refeicao.label }}</label>
+                        {{ form.max_refeicao }}
+                        {% if form.max_refeicao.errors %}
+                            <div class="invalid-feedback d-block">{{ form.max_refeicao.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.total_caloria.id_for_label }}" class="form-label">{{ form.total_caloria.label }}</label>
+                        {{ form.total_caloria }}
+                        {% if form.total_caloria.errors %}
+                            <div class="invalid-feedback d-block">{{ form.total_caloria.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.link.id_for_label }}" class="form-label">{{ form.link.label }}</label>
+                        {{ form.link }}
+                        {% if form.link.errors %}
+                            <div class="invalid-feedback d-block">{{ form.link.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.restricoes.label }}</label>
+                        <div class="border rounded p-3">
+                            <div class="row">
+                                {% for radio in form.restricoes %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {% if form.restricoes.initial and radio.choice_value|add:"0" in form.restricoes.initial|length %}
+                                                {# Se a restrição está no initial, ela é obrigatória #}
+                                                <input type="checkbox" class="form-check-input" name="restricoes" value="{{ radio.choice_value }}" checked disabled>
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                    {{ radio.choice_label }} <span class="text-muted small">(obrigatória)</span>
+                                                </label>
+                                            {% else %}
+                                                {{ radio }}
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                    {{ radio.choice_label }}
+                                                </label>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="col-12">
+                                        <p class="text-muted">Nenhuma restrição alimentar disponível.</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if form.restricoes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.restricoes.errors.0 }}</div>
+                        {% endif %}
+                        {% if form.restricoes.initial %}
+                        <small class="form-text text-muted d-block mt-2">
+                            💡 As restrições marcadas como "obrigatória" estão baseadas no seu perfil e não podem ser removidas. Você pode adicionar outras restrições conforme necessário.
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                        <a href="{% url 'listar_dietas' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.id %}Atualizar{% else %}Criar{% endif %} Dieta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

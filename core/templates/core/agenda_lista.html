@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+
+{% block title %}Minhas Agendas Alimentares{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📅 Minhas Agendas Alimentares</h2>
+    <a href="{% url 'criar_agenda' %}" class="btn btn-success">➕ Nova Agenda</a>
+</div>
+
+{% if agendas %}
+    <div class="row">
+        {% for agenda in agendas %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Agenda #{{ agenda.id }}</h5>
+                    <p class="card-text">
+                        <strong>Criada em:</strong> {{ agenda.created_at|date:"d/m/Y" }}<br>
+                        <strong>Status:</strong> 
+                        {% if agenda.is_active %}
+                            <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                        {% endif %}<br>
+                        <strong>Google Calendar:</strong>
+                        {% if agenda.is_google_agenda %}
+                            <span class="badge bg-info">Sincronizada</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">Não sincronizada</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{% url 'agenda_semanal' agenda.pk %}" class="btn btn-sm btn-info">📆 Ver Semanal</a>
+                    <a href="{% url 'editar_agenda' agenda.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'excluir_agenda' agenda.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Primeira</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <p>Você ainda não criou nenhuma agenda. <a href="{% url 'criar_agenda' %}">Clique aqui</a> para criar uma.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

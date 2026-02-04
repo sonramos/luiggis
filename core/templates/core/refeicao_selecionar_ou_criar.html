@@ -1,0 +1,164 @@
+{% extends "core/base.html" %}
+
+{% block title %}Adicionar Refeição - Agenda #{{ agenda_id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4">🍴 Adicionar Refeição - {{ dia_selecionado }}</h2>
+
+            <!-- Botões de opção -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-primary cursor-pointer" style="cursor: pointer;" onclick="document.getElementById('tab-existentes').click()">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">📋 Usar Refeição Existente</h5>
+                            <p class="card-text text-muted">Selecione uma refeição já cadastrada</p>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('tab-existentes').click()">
+                                Escolher Refeição
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success cursor-pointer" style="cursor: pointer;" onclick="document.getElementById('tab-criar').click()">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">➕ Criar Nova Refeição</h5>
+                            <p class="card-text text-muted">Crie uma nova refeição com receitas</p>
+                            <button type="button" class="btn btn-success" onclick="document.getElementById('tab-criar').click()">
+                                Criar Nova
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas de conteúdo -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-existentes" data-bs-toggle="tab" data-bs-target="#content-existentes" type="button" role="tab">
+                        📋 Refeições Existentes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-criar" data-bs-toggle="tab" data-bs-target="#content-criar" type="button" role="tab">
+                        ➕ Criar Nova
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- TAB 1: Selecionar refeição existente -->
+                <div class="tab-pane fade show active" id="content-existentes" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if refeicoes_usuario %}
+                                <p class="text-muted mb-3">Selecione uma refeição para adicionar à agenda:</p>
+                                <div class="list-group">
+                                    {% for refeicao in refeicoes_usuario %}
+                                    <form method="post" action="{% url 'adicionar_refeicao_existente' agenda_pk day_num refeicao.pk %}" class="list-group-item list-group-item-action p-3">
+                                        {% csrf_token %}
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ refeicao.get_tipo_refeicao_display }}</h6>
+                                                <p class="mb-1 text-muted">
+                                                    <small>{{ refeicao.date|date:"d/m/Y" }}</small>
+                                                </p>
+                                                <small class="badge bg-info text-dark">{{ refeicao.get_total_calorias }} kcal</small>
+                                                {% if refeicao.receitas.all %}
+                                                <small>
+                                                    <strong>Receitas:</strong><br>
+                                                    {% for receita in refeicao.receitas.all %}
+                                                    • {{ receita.titulo }}<br>
+                                                    {% endfor %}
+                                                </small>
+                                                {% else %}
+                                                <small class="text-muted">Nenhuma receita</small>
+                                                {% endif %}
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-success">Adicionar ✓</button>
+                                        </div>
+                                    </form>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Nenhuma refeição cadastrada.</strong>
+                                    <p class="mb-0 mt-2">Você não possui refeições criadas. Crie uma nova usando a aba "Criar Nova".</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Criar nova refeição -->
+                <div class="tab-pane fade" id="content-criar" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post" action="{% url 'criar_refeicao_agenda_dia' agenda_pk day_num %}">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Erros encontrados:</strong>
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                    <input type="date" name="date" class="form-control" value="{{ form.date.value|date:'Y-m-d' }}" required>
+                                    {% if form.date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo_refeicao.id_for_label }}" class="form-label">{{ form.tipo_refeicao.label }}</label>
+                                    {{ form.tipo_refeicao }}
+                                    {% if form.tipo_refeicao.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.tipo_refeicao.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.receitas.label }} <span class="text-danger">*</span></label>
+                                    <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                        {{ form.receitas }}
+                                    </div>
+                                    {% if form.receitas.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.receitas.errors.0 }}</div>
+                                    {% endif %}
+                                    {% if not receitas_disponiveis %}
+                                    <div class="alert alert-warning mt-2 mb-0">
+                                        <strong>⚠️ Aviso:</strong> Nenhuma receita disponível. 
+                                        <a href="{% url 'lista_receitas' %}">Crie uma receita primeiro</a>.
+                                    </div>
+                                    {% else %}
+                                    <small class="text-muted d-block mt-2">
+                                        * Obrigatório selecionar pelo menos uma receita
+                                    </small>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success">✓ Criar Refeição</button>
+                                    <a href="{% url 'agenda_semanal' agenda_pk %}" class="btn btn-secondary">← Voltar</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a href="{% url 'agenda_semanal' agenda_pk %}" class="btn btn-secondary">← Voltar à Agenda</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

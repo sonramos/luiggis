@@ -22,19 +22,9 @@
             {{ form.perfil }}
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Restrições Alimentares</label>
-            <div class="row">
-              {% for checkbox in form.restricoes %}
-                <div class="col-md-6">
-                  <div class="form-check">
-                    {{ checkbox }}
-                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
+          <p class="text-muted small">
+            <strong>ℹ️ Nota:</strong> Para gerenciar suas restrições alimentares, clique em <a href="{% url 'perfil' %}">Voltar ao Perfil</a> e use o botão "Adicionar Restrição" no modal.
+          </p>
 
           <div class="d-flex gap-2">
             <button class="btn btn-success" type="submit">Salvar</button>
