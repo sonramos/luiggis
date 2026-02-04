@@ -2,3 +2,6 @@ Django>=5.2
 psycopg2-binary
 dj-database-url
 google-genai
+djangorestframework
+django-filter
+Faker

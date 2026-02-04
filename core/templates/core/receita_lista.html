@@ -52,4 +52,42 @@
             <a href="{% url 'receita_geracao_ia' %}">Clique aqui para gerar sua primeira receita!</a>
         </div>
     {% endif %}
+
+
+        <!-- Paginação Bootstrap -->
+        {% if receitas.has_other_pages %}
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-center">
+                {% if receitas.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ receitas.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+
+                {% for num in receitas.paginator.page_range %}
+                    {% if receitas.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > receitas.number|add:'-3' and num < receitas.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if receitas.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ receitas.next_page_number }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ receitas.paginator.num_pages }}">Última</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
 {% endblock %}

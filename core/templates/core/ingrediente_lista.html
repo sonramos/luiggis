@@ -54,4 +54,44 @@
             <strong>Nenhum ingrediente cadastrado.</strong> Comece adicionando um novo!
         </div>
     {% endif %}
+
+
+        <!-- Paginação Bootstrap -->
+        {% if ingredientes.has_other_pages %}
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-center">
+                {% if ingredientes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ ingredientes.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+
+                {% for num in ingredientes.paginator.page_range %}
+                    {% if ingredientes.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > ingredientes.number|add:'-3' and num < ingredientes.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if ingredientes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ ingredientes.next_page_number }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ ingredientes.paginator.num_pages }}">Última</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    
 {% endblock %}
