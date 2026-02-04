@@ -112,7 +112,8 @@ class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
 # --- Vistas para Receita ---
 
 class ReceitaListView(LoginRequiredMixin, TemplateView):
-    """Exibe a lista de receitas do usuário logado com paginação manual."""
+    """Exibe a lista de receitas do usuário logado com paginação manual.
+    Admins/superusers veem todas as receitas; usuários comuns veem apenas as suas."""
     template_name = 'core/receita_lista.html'
 
     def get_context_data(self, **kwargs):
@@ -120,7 +121,11 @@ class ReceitaListView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         
         if user.is_authenticated:
-            receitas_list = Receita.objects.filter(owner=user).order_by('-id')
+            # Admins/superusers veem todas as receitas; outros veem apenas as suas
+            if user.is_superuser or user.is_staff:
+                receitas_list = Receita.objects.all().order_by('-id')
+            else:
+                receitas_list = Receita.objects.filter(owner=user).order_by('-id')
         else:
             receitas_list = Receita.objects.none()
         
