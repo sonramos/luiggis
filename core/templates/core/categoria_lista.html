@@ -3,19 +3,81 @@
 {% block title %}Lista de Categorias{% endblock %}
 
 {% block content %}
+<style>
+    .cat-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        font-family: sans-serif;
+    }
+
+    .info-box {
+        background-color: #e7f3fe;
+        border-left: 5px solid #2196F3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        color: #0c5460;
+    }
+
+    .cat-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .cat-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        margin-bottom: 8px;
+        padding: 12px 15px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        transition: transform 0.1s;
+    }
+
+    .cat-item:hover {
+        transform: translateX(5px);
+        border-color: #bbb;
+    }
+
+    .cat-item::before {
+        content: "🏷️";
+        margin-right: 10px;
+    }
+
+    .btn-back {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 15px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .btn-back:hover {
+        background-color: #5a6268;
+    }
+</style>
+
+<div class="cat-container">
     <h2>📚 Categorias de Ingredientes</h2>
-    <p>Para adicionar ou editar categorias, acesse a área administrativa do Django (Admin).</p>
+    
+    <div class="info-box">
+        <p>Para adicionar ou editar categorias, acesse a área administrativa do Django (Admin).</p>
+    </div>
 
     {% if categorias %}
-        <ul>
+        <ul class="cat-list">
             {% for categoria in categorias %}
-                <li>{{ categoria.nome }}</li>
+                <li class="cat-item"><strong>{{ categoria.nome }}</strong></li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>Nenhuma categoria cadastrada. Acesse o Admin para começar!</p>
+        <p style="color: #666; font-style: italic;">Nenhuma categoria cadastrada. Acesse o Admin para começar!</p>
     {% endif %}
     
-    <br>
-    <a href="{% url 'lista_ingredientes' %}" class="btn">Voltar para Ingredientes</a>
+    <a href="{% url 'lista_ingredientes' %}" class="btn-back">⬅ Voltar para Ingredientes</a>
+</div>
 {% endblock %}

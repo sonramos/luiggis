@@ -21,7 +21,7 @@ class IngredienteAdmin(admin.ModelAdmin):
 
 @admin.register(Receita)
 class ReceitaAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'tempo_preparo', 'is_ai_generated')
+    list_display = ('titulo', 'tempo_preparo', 'is_ai_generated', 'owner')
     search_fields = ('titulo',)
     list_filter = ('is_ai_generated',)
     readonly_fields = ('is_ai_generated',)

@@ -34,6 +34,19 @@ class ReceitaIAForm(forms.ModelForm):
         }
 
 
+class ReceitaForm(forms.ModelForm):
+    """Form usado para edição manual de uma receita."""
+    class Meta:
+        model = Receita
+        fields = ['titulo', 'instrucoes', 'tempo_preparo', 'ingredientes']
+        widgets = {
+            'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Título da receita'}),
+            'instrucoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
+            'tempo_preparo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ingredientes': forms.SelectMultiple(attrs={'class': 'form-select'}),
+        }
+
+
 class UserRegistrationForm(UserCreationForm):
     """Formulário de cadastro público para o modelo `Usuario`.
 

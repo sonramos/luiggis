@@ -93,6 +93,16 @@ class Receita(models.Model):
         help_text="Prompt usado para gerar a receita pela IA, se aplicável."
     )
     is_ai_generated = models.BooleanField(default=False)
+
+    # Dono/autor da receita — usado para autorização (pode ser nulo para receitas antigas)
+    owner = models.ForeignKey(
+        'Usuario',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='receitas',
+        help_text='Usuário dono/autor da receita'
+    )
     
     # Relação N:M com Ingrediente (através da tabela IngredienteReceita)
     ingredientes = models.ManyToManyField(

@@ -25,6 +25,9 @@ urlpatterns = [
     # Receitas
     path('receitas/', views.ReceitaListView.as_view(), name='lista_receitas'),
     path('receitas/<int:pk>/', views.ReceitaDetailView.as_view(), name='detalhes_receita'),
+    # Editar/Excluir receitas (apenas para donos ou superuser)
+    path('receitas/editar/<int:pk>/', views.ReceitaUpdateView.as_view(), name='editar_receita'),
+    path('receitas/excluir/<int:pk>/', views.ReceitaDeleteView.as_view(), name='excluir_receita'),
     
     # Geração de Receita via IA
     path('receitas/gerar/', views.GerarReceitaIAView.as_view(), name='receita_geracao_ia'),
