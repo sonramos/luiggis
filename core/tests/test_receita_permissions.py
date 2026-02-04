@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from core.models import Perfil, Receita
 
+# AUTORIZACAO: testes para permissões de receita (owner vs non-owner)
+
 User = get_user_model()
 
 class ReceitaPermissionTests(TestCase):

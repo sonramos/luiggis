@@ -7,6 +7,7 @@
         <h2>🍽️ Gestão de Ingredientes</h2>
         <div class="d-flex justify-content-end align-items-end mb-3">
             <div class="d-block p-3" style="max-width: 150px;">
+                <!-- AUTORIZACAO: adicionar ingrediente disponível apenas para usuários autenticados -->
                 {% if user.is_authenticated %}
                     <a href="{% url 'adicionar_ingrediente' %}" class="btn btn-success">➕ Adicionar Ingrediente</a>
                 {% else %}
@@ -37,6 +38,7 @@
                         <td>{{ ingrediente.categoria|default:"Não Definida" }}</td>
                         <td>{{ ingrediente.caloria }}</td>
                         <td>
+                            <!-- AUTORIZACAO: Editar/Excluir ingredientes somente para usuários autenticados -->
                             {% if user.is_authenticated %}
                                 <a href="{% url 'editar_ingrediente' ingrediente.pk %}" class="btn btn-sm btn-warning">Editar</a>
                                 <a href="{% url 'excluir_ingrediente' ingrediente.pk %}" class="btn btn-sm btn-danger">Excluir</a>

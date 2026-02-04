@@ -53,6 +53,7 @@ class IngredienteListView(ListView):
     template_name = 'core/ingrediente_lista.html'
     context_object_name = 'ingredientes' # Nome que será usado no template
 
+# AUTORIZACAO: exige login para criar ingredientes
 class IngredienteCreateView(LoginRequiredMixin, CreateView):
     """ Permite adicionar um novo ingrediente (exige login). """
     model = Ingrediente
@@ -60,6 +61,7 @@ class IngredienteCreateView(LoginRequiredMixin, CreateView):
     template_name = 'core/ingrediente_form.html'
     success_url = reverse_lazy('lista_ingredientes') # Redireciona para a lista após o sucesso
 
+# AUTORIZACAO: exige login para editar ingredientes
 class IngredienteUpdateView(LoginRequiredMixin, UpdateView):
     """ Permite editar um ingrediente existente (exige login). """
     model = Ingrediente
@@ -67,6 +69,7 @@ class IngredienteUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'core/ingrediente_form.html'
     success_url = reverse_lazy('lista_ingredientes')
 
+# AUTORIZACAO: exige login para excluir ingredientes
 class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
     """ Permite excluir um ingrediente (exige login). """
     model = Ingrediente
@@ -77,6 +80,7 @@ class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- Vistas para Receita ---
 
+# AUTORIZACAO: lista apenas receitas do usuário logado (requere autenticação)
 class ReceitaListView(ListView):
     """ Exibe a lista de receitas do usuário logado (minhas receitas). """
     model = Receita
@@ -90,6 +94,7 @@ class ReceitaListView(ListView):
         return Receita.objects.none()  # não exibe receitas para anonimos
 
 
+# AUTORIZACAO: Somente owner ou superuser pode editar/excluir o objeto (aplica a Receitas)
 class OwnerRequiredMixin:
     """Mixin simples que verifica se o usuário requisitante é o dono do objeto."""
     def dispatch(self, request, *args, **kwargs):
@@ -114,6 +119,7 @@ class ReceitaDetailView(DetailView):
     context_object_name = 'receita'
 
 
+# AUTORIZACAO: exige login para gerar receita via IA e atribui owner ao criar
 class GerarReceitaIAView(LoginRequiredMixin, CreateView):
     """
     Exibe o formulário de prompt e processa a geração da receita via IA.
@@ -181,6 +187,7 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
 
 
+# AUTORIZACAO: apenas owner ou superuser pode editar esta receita
 class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     """Permite que o dono (ou superuser) edite uma receita."""
     model = Receita
@@ -189,6 +196,7 @@ class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     success_url = reverse_lazy('lista_receitas')
 
 
+# AUTORIZACAO: apenas owner ou superuser pode excluir esta receita
 class ReceitaDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     """Permite que o dono (ou superuser) exclua uma receita."""
     model = Receita
@@ -221,6 +229,7 @@ class RegisterView(FormView):
         return super().form_valid(form)
 
 
+# AUTORIZACAO: requer login para exibir perfil do usuário autenticado
 class PerfilDetailView(LoginRequiredMixin, TemplateView):
     """Exibe os dados de perfil do usuário logado."""
     template_name = 'core/profile.html'
@@ -235,6 +244,7 @@ class PerfilDetailView(LoginRequiredMixin, TemplateView):
         return context
 
 
+# AUTORIZACAO: requer login para editar perfil (aplicação de autorização no perfil próprio)
 class PerfilUpdateView(LoginRequiredMixin, UpdateView):
     """Permite que o usuário edite seu `perfil` e `restricoes`."""
     model = Usuario

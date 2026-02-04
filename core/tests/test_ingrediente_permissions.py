@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from core.models import Perfil, Ingrediente
 
+# AUTORIZACAO: testes para permissões de ingrediente (login requerido para criar/editar/excluir)
+
 User = get_user_model()
 
 class IngredientePermissionTests(TestCase):
