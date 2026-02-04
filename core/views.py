@@ -21,6 +21,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from google import genai 
 import os
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 # --- Landing Page ---
 
@@ -30,48 +32,77 @@ class LandingPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Passa estatísticas para a landing page
         context['total_ingredientes'] = Ingrediente.objects.count()
         context['total_receitas'] = Receita.objects.count()
         context['total_receitas_ia'] = Receita.objects.filter(is_ai_generated=True).count()
         return context
 
 
-# --- Vistas para Categoria (Opcional) ---
+# --- Vistas para Categoria ---
 
-class CategoriaListView(ListView):
-    model = Categoria
+class CategoriaListView(TemplateView):
     template_name = 'core/categoria_lista.html'
-    context_object_name = 'categorias'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        categorias_list = Categoria.objects.all().order_by('nome')
+        page = self.request.GET.get('page', 1)
+        paginator = Paginator(categorias_list, 9)  # 12 categorias por página
+        
+        try:
+            categorias = paginator.page(page)
+        except PageNotAnInteger:
+            categorias = paginator.page(1)
+        except EmptyPage:
+            categorias = paginator.page(paginator.num_pages)
+        
+        context['categorias'] = categorias
+        return context
 
 
 # --- Vistas para Ingrediente (CRUD) ---
 
-class IngredienteListView(ListView):
-    """ Exibe a lista de todos os ingredientes. """
-    model = Ingrediente
+class IngredienteListView(TemplateView):
+    """Exibe a lista de todos os ingredientes com paginação manual."""
     template_name = 'core/ingrediente_lista.html'
-    context_object_name = 'ingredientes' # Nome que será usado no template
 
-# AUTORIZACAO: exige login para criar ingredientes
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        ingredientes_list = Ingrediente.objects.all().order_by('nome')
+        page = self.request.GET.get('page', 1)
+        paginator = Paginator(ingredientes_list, 12)  # 12 ingredientes por página
+        
+        try:
+            ingredientes = paginator.page(page)
+        except PageNotAnInteger:
+            ingredientes = paginator.page(1)
+        except EmptyPage:
+            ingredientes = paginator.page(paginator.num_pages)
+        
+        context['ingredientes'] = ingredientes
+        return context
+
+
 class IngredienteCreateView(LoginRequiredMixin, CreateView):
-    """ Permite adicionar um novo ingrediente (exige login). """
+    """Permite adicionar um novo ingrediente (exige login)."""
     model = Ingrediente
     form_class = IngredienteForm
     template_name = 'core/ingrediente_form.html'
-    success_url = reverse_lazy('lista_ingredientes') # Redireciona para a lista após o sucesso
+    success_url = reverse_lazy('lista_ingredientes')
+    
 
-# AUTORIZACAO: exige login para editar ingredientes
 class IngredienteUpdateView(LoginRequiredMixin, UpdateView):
-    """ Permite editar um ingrediente existente (exige login). """
+    """Permite editar um ingrediente existente (exige login)."""
     model = Ingrediente
     form_class = IngredienteForm
     template_name = 'core/ingrediente_form.html'
     success_url = reverse_lazy('lista_ingredientes')
 
-# AUTORIZACAO: exige login para excluir ingredientes
+
 class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
-    """ Permite excluir um ingrediente (exige login). """
+    """Permite excluir um ingrediente (exige login)."""
     model = Ingrediente
     template_name = 'core/ingrediente_confirmar_delete.html'
     context_object_name = 'ingrediente'
@@ -80,58 +111,61 @@ class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- Vistas para Receita ---
 
-# AUTORIZACAO: lista apenas receitas do usuário logado (requere autenticação)
-class ReceitaListView(ListView):
-    """ Exibe a lista de receitas do usuário logado (minhas receitas). """
-    model = Receita
+class ReceitaListView(LoginRequiredMixin, TemplateView):
+    """Exibe a lista de receitas do usuário logado com paginação manual."""
     template_name = 'core/receita_lista.html'
-    context_object_name = 'receitas'
 
-    def get_queryset(self):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         user = self.request.user
+        
         if user.is_authenticated:
-            return Receita.objects.filter(owner=user).order_by('-id')
-        return Receita.objects.none()  # não exibe receitas para anonimos
+            receitas_list = Receita.objects.filter(owner=user).order_by('-id')
+        else:
+            receitas_list = Receita.objects.none()
+        
+        page = self.request.GET.get('page', 1)
+        paginator = Paginator(receitas_list, 9)  # 9 receitas por página
+        
+        try:
+            receitas = paginator.page(page)
+        except PageNotAnInteger:
+            receitas = paginator.page(1)
+        except EmptyPage:
+            receitas = paginator.page(paginator.num_pages)
+        
+        context['receitas'] = receitas
+        return context
 
 
-# AUTORIZACAO: Somente owner ou superuser pode editar/excluir o objeto (aplica a Receitas)
 class OwnerRequiredMixin:
     """Mixin simples que verifica se o usuário requisitante é o dono do objeto."""
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
         user = request.user
-        # Se não há owner, apenas superuser pode administrar
         if obj.owner is None:
             if not user.is_superuser:
                 raise PermissionDenied
-        # Se há owner, apenas o owner (ou superuser) pode administrar
         elif obj.owner != user and not user.is_superuser:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
 
-# --- Vistas para Receita ---
-
 class ReceitaDetailView(DetailView):
-    """ Exibe os detalhes de uma receita gerada. """
+    """Exibe os detalhes de uma receita gerada."""
     model = Receita
     template_name = 'core/receita_detalhe.html'
     context_object_name = 'receita'
 
 
-# AUTORIZACAO: exige login para gerar receita via IA e atribui owner ao criar
 class GerarReceitaIAView(LoginRequiredMixin, CreateView):
-    """
-    Exibe o formulário de prompt e processa a geração da receita via IA.
-    """
+    """Exibe o formulário de prompt e processa a geração da receita via IA."""
     model = Receita
     form_class = ReceitaIAForm
     template_name = 'core/receita_geracao_ia.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Passamos a lista de ingredientes disponíveis para o template, 
-        # caso queira dar opções para o prompt.
         context['ingredientes_disponiveis'] = list(Ingrediente.objects.values_list('nome', flat=True))
         return context
 
@@ -139,16 +173,13 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
         ingredientes_ids = self.request.POST.getlist('ingredientes_ids')
         prompt = form.instance.prompt_geracao
         
-        # 1. Configurar o Cliente IA
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
-            # Em um projeto real, você faria um tratamento de erro melhor
             raise EnvironmentError("GEMINI_API_KEY não configurada no ambiente.")
             
         try:
             client = genai.Client(api_key=api_key)
 
-            # 2. Formular o Prompt para a IA
             system_instruction = (
                 "Você é um chef IA. Dada a lista de ingredientes e restrições do usuário, "
                 "gere uma receita completa. O resultado deve ser em JSON no formato: "
@@ -164,16 +195,13 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
                 )
             )
 
-            # 3. Processar e Salvar o Resultado
             import json
             receita_data = json.loads(response.text)
             
-            # Atualiza a instância do formulário com os dados da IA
             form.instance.titulo = receita_data.get('titulo', 'Receita Gerada')
             form.instance.instrucoes = receita_data.get('instrucoes', 'Instruções não geradas.')
             form.instance.tempo_preparo = receita_data.get('tempo_preparo', 20)
             form.instance.is_ai_generated = True
-            # Atribui o owner como o usuário logado
             form.instance.owner = self.request.user
 
             # Salva o Model Receita
@@ -206,7 +234,6 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
 
     def get_success_url(self):
-        """Redireciona para a página da receita criada para exibir o resultado."""
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
     
     def get_context_data(self, **kwargs):
@@ -216,7 +243,6 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
         return context
 
 
-# AUTORIZACAO: apenas owner ou superuser pode editar esta receita
 class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     """Permite que o dono (ou superuser) edite uma receita."""
     model = Receita
@@ -225,7 +251,6 @@ class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     success_url = reverse_lazy('lista_receitas')
 
 
-# AUTORIZACAO: apenas owner ou superuser pode excluir esta receita
 class ReceitaDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     """Permite que o dono (ou superuser) exclua uma receita."""
     model = Receita
@@ -241,8 +266,6 @@ class RegisterView(FormView):
     success_url = reverse_lazy('landing')
 
     def form_valid(self, form):
-        # Não permitimos escolha de `perfil` no cadastro público.
-        # Atribuímos o perfil padrão 'Usuário' automaticamente.
         user = form.save(commit=False)
         try:
             perfil_default = Perfil.objects.get(tipo__iexact='usuario')
@@ -253,12 +276,10 @@ class RegisterView(FormView):
             user.perfil = perfil_default
 
         user.save()
-        # Autentica e faz login automático
         login(self.request, user)
         return super().form_valid(form)
 
 
-# AUTORIZACAO: requer login para exibir perfil do usuário autenticado
 class PerfilDetailView(LoginRequiredMixin, TemplateView):
     """Exibe os dados de perfil do usuário logado."""
     template_name = 'core/profile.html'
@@ -267,15 +288,13 @@ class PerfilDetailView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context['user'] = user
-        # inclui restrições e perfil
         context['restricoes'] = user.restricoes.all()
         context['perfil'] = user.perfil
         return context
 
 
-# AUTORIZACAO: requer login para editar perfil (aplicação de autorização no perfil próprio)
 class PerfilUpdateView(LoginRequiredMixin, UpdateView):
-    """Permite que o usuário edite seu `perfil` e `restricoes`."""
+    """Permite que o usuário edite seu perfil e restricoes."""
     model = Usuario
     form_class = PerfilUsuarioForm
     template_name = 'core/profile_form.html'
@@ -293,9 +312,6 @@ class PerfilUpdateView(LoginRequiredMixin, UpdateView):
 
 
 def logout_view(request):
-    """Faz logout do usuário e redireciona para a landing.
-
-    Aceita GET e POST para facilitar uso a partir de um link simples na navbar.
-    """
+    """Faz logout do usuário e redireciona para a landing."""
     logout(request)
     return redirect('landing')

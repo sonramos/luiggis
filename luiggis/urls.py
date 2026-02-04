@@ -19,5 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
+    path('api/', include('core.api_urls')),  # API REST endpoints
+    path('api-auth/', include('rest_framework.urls')),  # Login/logout da API navegável
+    path('', include('core.urls')),  # Web views
 ]

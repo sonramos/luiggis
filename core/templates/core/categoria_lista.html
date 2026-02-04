@@ -77,7 +77,44 @@
     {% else %}
         <p style="color: #666; font-style: italic;">Nenhuma categoria cadastrada. Acesse o Admin para começar!</p>
     {% endif %}
-    
+
+        <!-- Paginação Bootstrap -->
+        {% if categorias.has_other_pages %}
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-center">
+                {% if categorias.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+
+                {% for num in categorias.paginator.page_range %}
+                    {% if categorias.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > categorias.number|add:'-3' and num < categorias.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if categorias.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.next_page_number }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categorias.paginator.num_pages }}">Última</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
     <a href="{% url 'lista_ingredientes' %}" class="btn-back">⬅ Voltar para Ingredientes</a>
 </div>
 {% endblock %}
