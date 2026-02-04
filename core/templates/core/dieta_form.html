@@ -61,12 +61,40 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">{{ form.ingredientes_restritos.label }}</label>
-                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
-                            {{ form.ingredientes_restritos }}
+                        <label class="form-label">{{ form.restricoes.label }}</label>
+                        <div class="border rounded p-3">
+                            <div class="row">
+                                {% for radio in form.restricoes %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {% if form.restricoes.initial and radio.choice_value|add:"0" in form.restricoes.initial|length %}
+                                                {# Se a restrição está no initial, ela é obrigatória #}
+                                                <input type="checkbox" class="form-check-input" name="restricoes" value="{{ radio.choice_value }}" checked disabled>
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                    {{ radio.choice_label }} <span class="text-muted small">(obrigatória)</span>
+                                                </label>
+                                            {% else %}
+                                                {{ radio }}
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                    {{ radio.choice_label }}
+                                                </label>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="col-12">
+                                        <p class="text-muted">Nenhuma restrição alimentar disponível.</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        {% if form.ingredientes_restritos.errors %}
-                            <div class="invalid-feedback d-block">{{ form.ingredientes_restritos.errors.0 }}</div>
+                        {% if form.restricoes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.restricoes.errors.0 }}</div>
+                        {% endif %}
+                        {% if form.restricoes.initial %}
+                        <small class="form-text text-muted d-block mt-2">
+                            💡 As restrições marcadas como "obrigatória" estão baseadas no seu perfil e não podem ser removidas. Você pode adicionar outras restrições conforme necessário.
+                        </small>
                         {% endif %}
                     </div>
 

@@ -45,7 +45,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">{{ form.receitas.label }}</label>
+                        <label class="form-label">{{ form.receitas.label }} <span class="text-danger">*</span></label>
                         <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
                             {{ form.receitas }}
                         </div>
@@ -53,9 +53,16 @@
                             <div class="invalid-feedback d-block">{{ form.receitas.errors.0 }}</div>
                         {% endif %}
                         <small class="form-text text-muted d-block mt-2">
-                            💡 Selecione uma ou mais receitas para incluir nesta refeição. Deixe vazio se preferir apenas registrar o tipo de refeição.
+                            * Obrigatório selecionar pelo menos uma receita para a refeição
                         </small>
                     </div>
+
+                    {% if form.instance.id %}
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <strong>Total de Calorias:</strong> 
+                        <span class="badge bg-info text-dark" style="font-size: 0.95rem;">{{ form.instance.get_total_calorias }} kcal</span>
+                    </div>
+                    {% endif %}
 
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
                         <a href="{% url 'listar_refeicoes' %}" class="btn btn-secondary">Cancelar</a>

@@ -25,15 +25,15 @@
                             <span class="badge bg-secondary">Inativa</span>
                         {% endif %}
                     </p>
-                    {% if dieta.ingredientes_restritos.all %}
+                    {% if dieta.restricoes.all %}
                     <div class="mt-2">
-                        <small><strong>Ingredientes Restritos:</strong></small>
+                        <small><strong>Restrições Alimentares:</strong></small>
                         <div>
-                            {% for ing in dieta.ingredientes_restritos.all|slice:":3" %}
-                                <span class="badge bg-warning text-dark">{{ ing.nome }}</span>
+                            {% for rest in dieta.restricoes.all|slice:":3" %}
+                                <span class="badge bg-danger">{{ rest.tipo }}</span>
                             {% endfor %}
-                            {% if dieta.ingredientes_restritos.count > 3 %}
-                                <span class="badge bg-light text-dark">+{{ dieta.ingredientes_restritos.count|add:"-3" }} mais</span>
+                            {% if dieta.restricoes.count > 3 %}
+                                <span class="badge bg-light text-dark">+{{ dieta.restricoes.count|add:"-3" }} mais</span>
                             {% endif %}
                         </div>
                     </div>

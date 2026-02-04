@@ -137,16 +137,55 @@ class PerfilUsuarioForm(forms.ModelForm):
 
 class DietaForm(forms.ModelForm):
     """Formulário para criação/edição de Dieta."""
-    ingredientes_restritos = forms.ModelMultipleChoiceField(
-        queryset=Ingrediente.objects.all(),
+    restricoes = forms.ModelMultipleChoiceField(
+        queryset=RestricaoAlimentar.objects.filter(is_active=True),
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
-        label='Ingredientes Restritos'
+        widget=forms.CheckboxSelectMultiple(),
+        label='Restrições Alimentares da Dieta'
     )
+    
+    def __init__(self, *args, user=None, **kwargs):
+        """Inicializa o formulário pré-preenchendo restrições do perfil do usuário."""
+        super().__init__(*args, **kwargs)
+        
+        if user:
+            # Obter restrições do perfil do usuário
+            restricoes_perfil = user.perfil.restricoes.filter(is_active=True)
+            
+            # Pré-preencher as restrições do perfil
+            if restricoes_perfil.exists():
+                self.fields['restricoes'].initial = restricoes_perfil
+                
+                # Armazenar as restrições obrigatórias para uso no clean()
+                self.restricoes_obrigatorias = set(restricoes_perfil.values_list('id', flat=True))
+            else:
+                self.restricoes_obrigatorias = set()
+        else:
+            self.restricoes_obrigatorias = set()
+    
+    def clean(self):
+        """Validação customizada - garante que restrições obrigatórias estejam selecionadas."""
+        cleaned_data = super().clean()
+        restricoes_selecionadas = cleaned_data.get('restricoes')
+        
+        if restricoes_selecionadas:
+            ids_selecionados = set(r.id for r in restricoes_selecionadas)
+            # Verificar se todas as restrições obrigatórias foram mantidas
+            if not self.restricoes_obrigatorias.issubset(ids_selecionados):
+                raise forms.ValidationError(
+                    'Você deve manter as restrições alimentares do seu perfil selecionadas.'
+                )
+        elif self.restricoes_obrigatorias:
+            # Se há restrições obrigatórias mas nenhuma foi selecionada
+            raise forms.ValidationError(
+                'Você deve manter as restrições alimentares do seu perfil selecionadas.'
+            )
+        
+        return cleaned_data
     
     class Meta:
         model = Dieta
-        fields = ['min_refeicao', 'max_refeicao', 'total_caloria', 'link', 'ingredientes_restritos']
+        fields = ['min_refeicao', 'max_refeicao', 'total_caloria', 'link', 'restricoes']
         widgets = {
             'min_refeicao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 3'}),
             'max_refeicao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 5'}),
@@ -159,20 +198,18 @@ class DietaForm(forms.ModelForm):
             'total_caloria': 'Total de calorias por dia',
             'link': 'Link ou referência (opcional)',
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Customizar o campo de ingredientes para exibir porção
-        self.fields['ingredientes_restritos'].label_from_instance = lambda obj: f"{obj.nome} ({obj.get_porcao_display()})"
 
 
 class RefeicaoForm(forms.ModelForm):
     """Formulário para criação/edição de Refeição."""
     receitas = forms.ModelMultipleChoiceField(
         queryset=Receita.objects.all(),
-        required=False,
+        required=True,
         widget=forms.CheckboxSelectMultiple(),
-        label='Receitas'
+        label='Receitas',
+        error_messages={
+            'required': 'Selecione pelo menos uma receita para a refeição.'
+        }
     )
     
     def __init__(self, *args, user=None, **kwargs):

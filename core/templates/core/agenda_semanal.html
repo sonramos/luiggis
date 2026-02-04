@@ -5,11 +5,20 @@
 
 {% block content %}
 <style>
+    .nav-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
     .nav-tabs .nav-link {
         color: #495057;
         border: 1px solid #dee2e6;
         border-bottom: none;
         background-color: #f8f9fa;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
     
     .nav-tabs .nav-link:hover {
@@ -36,7 +45,7 @@
     {% for day_num, day_name in DIAS_SEMANA.items %}
     <li class="nav-item" role="presentation">
         <button class="nav-link {% if day_num == 0 %}active{% endif %}" id="day-{{ day_num }}-tab" data-bs-toggle="tab" data-bs-target="#day-{{ day_num }}" type="button" role="tab" aria-controls="day-{{ day_num }}" aria-selected="{% if day_num == 0 %}true{% else %}false{% endif %}">
-            {{ day_name }}
+            <span style="color: #212529;">{{ day_name }}</span>
             {% if refeicoes_por_dia|length > 0 %}
                 {% for rday, rlist in refeicoes_por_dia.items %}
                     {% if rday == day_num %}<span class="badge bg-success ms-2">{{ rlist|length }}</span>{% endif %}
@@ -65,6 +74,7 @@
                                 <div>
                                     <h6 class="mb-1">{{ refeicao.get_tipo_refeicao_display }}</h6>
                                     <p class="mb-1 text-muted">{{ refeicao.date|date:"d/m/Y" }}</p>
+                                    <small class="badge bg-info text-dark">{{ refeicao.get_total_calorias }} kcal</small>
                                     {% if refeicao.receitas.all %}
                                     <small>
                                         <strong>Receitas:</strong><br>

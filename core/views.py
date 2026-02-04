@@ -167,7 +167,29 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['ingredientes_disponiveis'] = list(Ingrediente.objects.values_list('nome', flat=True))
+        
+        # Verificar se uma dieta foi passada como parâmetro
+        dieta_id = self.request.GET.get('dieta')
+        context['dieta_id'] = dieta_id
+        
+        if dieta_id:
+            try:
+                dieta = Dieta.objects.get(id=dieta_id, usuario=self.request.user)
+                # Obter apenas ingredientes permitidos pela dieta
+                context['ingredientes_disponiveis'] = list(
+                    dieta.get_ingredientes_permitidos().values_list('nome', flat=True)
+                )
+                context['ingredientes_por_categoria'] = dieta.get_ingredientes_permitidos().select_related('categoria').order_by('categoria__nome', 'nome')
+                context['dieta'] = dieta
+            except Dieta.DoesNotExist:
+                # Fallback para todos os ingredientes se dieta não existe
+                context['ingredientes_disponiveis'] = list(Ingrediente.objects.values_list('nome', flat=True))
+                context['ingredientes_por_categoria'] = Ingrediente.objects.select_related('categoria').order_by('categoria__nome', 'nome')
+        else:
+            # Sem dieta especificada, mostrar todos os ingredientes
+            context['ingredientes_disponiveis'] = list(Ingrediente.objects.values_list('nome', flat=True))
+            context['ingredientes_por_categoria'] = Ingrediente.objects.select_related('categoria').order_by('categoria__nome', 'nome')
+        
         return context
 
     def form_valid(self, form):
@@ -236,12 +258,6 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Buscamos todos os ingredientes ordenados por categoria para o agrupamento funcionar
-        context['ingredientes_por_categoria'] = Ingrediente.objects.select_related('categoria').all().order_by('categoria__nome', 'nome')
-        return context
 
 
 class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -337,6 +353,12 @@ class DietaCreateView(LoginRequiredMixin, CreateView):
     form_class = DietaForm
     template_name = 'core/dieta_form.html'
     
+    def get_form_kwargs(self):
+        """Passa o usuário ao formulário."""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
         form.instance.usuario = self.request.user
         messages.success(self.request, 'Dieta criada com sucesso.')
@@ -355,14 +377,18 @@ class DietaUpdateView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
         return Dieta.objects.filter(usuario=self.request.user)
     
+    def get_form_kwargs(self):
+        """Passa o usuário ao formulário."""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
         messages.success(self.request, 'Dieta atualizada com sucesso.')
         return super().form_valid(form)
     
     def get_success_url(self):
         return reverse_lazy('listar_dietas')
-
-
 class DietaDeleteView(LoginRequiredMixin, DeleteView):
     """Deleta uma dieta."""
     model = Dieta
@@ -381,15 +407,27 @@ class DietaDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- Vistas para Refeição ---
 
-class RefeicaoListView(LoginRequiredMixin, ListView):
-    """Lista todas as refeições do usuário logado."""
-    model = Refeicao
+class RefeicaoListView(LoginRequiredMixin, TemplateView):
+    """Lista todas as refeições do usuário logado com paginação manual."""
     template_name = 'core/refeicao_lista.html'
-    context_object_name = 'refeicoes'
-    paginate_by = 20
-    
-    def get_queryset(self):
-        return Refeicao.objects.filter(usuario=self.request.user).order_by('-date', '-id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        refeicoes_list = Refeicao.objects.filter(usuario=user).order_by('-date', '-id')
+        page = self.request.GET.get('page', 1)
+        paginator = Paginator(refeicoes_list, 10)  # 10 refeições por página
+        
+        try:
+            refeicoes = paginator.page(page)
+        except PageNotAnInteger:
+            refeicoes = paginator.page(1)
+        except EmptyPage:
+            refeicoes = paginator.page(paginator.num_pages)
+        
+        context['refeicoes'] = refeicoes
+        return context
 
 
 class RefeicaoCreateView(LoginRequiredMixin, CreateView):
@@ -442,6 +480,7 @@ class RefeicaoSelecionarOuCriarView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         """Passa refeições do usuário e formulário para o contexto."""
+        from datetime import datetime, timedelta
         context = super().get_context_data(**kwargs)
         context['agenda'] = self.agenda
         context['agenda_pk'] = self.agenda_pk
@@ -461,8 +500,13 @@ class RefeicaoSelecionarOuCriarView(LoginRequiredMixin, TemplateView):
         # Refeições existentes do usuário
         context['refeicoes_usuario'] = Refeicao.objects.filter(usuario=self.request.user).order_by('-date')
         
-        # Formulário para criar nova refeição
-        context['form'] = RefeicaoForm(user=self.request.user)
+        # Calcular a data do dia selecionado
+        today = datetime.now().date()
+        sunday = today - timedelta(days=today.weekday() + 1)
+        selected_date = sunday + timedelta(days=self.day_num)
+        
+        # Formulário para criar nova refeição com data inicial
+        context['form'] = RefeicaoForm(user=self.request.user, initial={'date': selected_date})
         context['receitas_disponiveis'] = Receita.objects.filter(owner=self.request.user).exists()
         
         return context
@@ -486,19 +530,32 @@ class RefeicaoAdicionarExistenteView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
-        """Associa a refeição à agenda."""
+        """Associa a refeição à agenda, copiando-a para o dia específico."""
         from .models import RefeicaoAgenda
+        from datetime import datetime, timedelta
         
-        # Verifica se a refeição já está associada a esta agenda
-        if RefeicaoAgenda.objects.filter(agenda_alimentar=self.agenda, refeicao=self.refeicao).exists():
-            messages.warning(request, 'Esta refeição já está adicionada a esta agenda.')
-        else:
-            RefeicaoAgenda.objects.create(
-                agenda_alimentar=self.agenda,
-                refeicao=self.refeicao
-            )
-            messages.success(request, 'Refeição adicionada à agenda com sucesso!')
+        # Calcular a data do dia selecionado
+        today = datetime.now().date()
+        sunday = today - timedelta(days=today.weekday() + 1)
+        selected_date = sunday + timedelta(days=self.day_num)
         
+        # Criar uma cópia da refeição com a nova data
+        refeicao_copia = Refeicao.objects.create(
+            usuario=self.refeicao.usuario,
+            date=selected_date,
+            tipo_refeicao=self.refeicao.tipo_refeicao
+        )
+        
+        # Copiar receitas da refeição original
+        refeicao_copia.receitas.set(self.refeicao.receitas.all())
+        
+        # Associar à agenda
+        RefeicaoAgenda.objects.create(
+            agenda_alimentar=self.agenda,
+            refeicao=refeicao_copia
+        )
+        
+        messages.success(request, 'Refeição adicionada à agenda com sucesso!')
         return redirect('agenda_semanal', pk=self.agenda_pk)
 
 
@@ -520,9 +577,23 @@ class RefeicaoCreateAgendaDiaView(LoginRequiredMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
     
     def get_form_kwargs(self):
-        """Passa o usuário ao formulário para filtrar receitas."""
+        """Passa o usuário ao formulário para filtrar receitas e pré-preenche a data."""
+        from datetime import datetime, timedelta
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
+        
+        # Calcular a data do dia selecionado (baseado na semana atual)
+        today = datetime.now().date()
+        # Encontrar o domingo desta semana
+        sunday = today - timedelta(days=today.weekday() + 1)
+        # Adicionar o dia selecionado
+        selected_date = sunday + timedelta(days=self.day_num)
+        
+        # Pré-preencher a data no formulário
+        if 'data' not in kwargs:
+            kwargs['data'] = {}
+        kwargs['initial'] = {'date': selected_date}
+        
         return kwargs
     
     def form_valid(self, form):

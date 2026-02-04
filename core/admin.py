@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Categoria, Ingrediente, Receita, Usuario, Perfil, RestricaoAlimentar
+from .models import Categoria, Ingrediente, Receita, Usuario, Perfil, RestricaoAlimentar, Dieta
 
 @admin.register(Perfil)
 class PerfilAdmin(admin.ModelAdmin):
@@ -12,6 +12,7 @@ class RestricaoAlimentarAdmin(admin.ModelAdmin):
     search_fields = ('tipo',)
     list_filter = ('is_active',)
     ordering = ('tipo',)
+    filter_horizontal = ('categorias_restritas',)
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -40,3 +41,12 @@ class UsuarioAdmin(admin.ModelAdmin):
     search_fields = ('username', 'email')
     list_filter = ('perfil', 'is_active')
     ordering = ('username',)
+
+@admin.register(Dieta)
+class DietaAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'total_caloria', 'min_refeicao', 'max_refeicao', 'is_active')
+    search_fields = ('usuario__username',)
+    list_filter = ('is_active', 'usuario')
+    filter_horizontal = ('restricoes',)
+    ordering = ('-id',)
+
