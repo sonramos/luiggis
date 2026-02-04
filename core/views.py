@@ -11,8 +11,8 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from .models import Ingrediente, Categoria, Receita, Usuario, Perfil
-from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm, ReceitaForm
+from .models import Ingrediente, Categoria, Receita, Usuario, Perfil, IngredienteReceita # Importe os Models
+from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm, ReceitaForm # Importe os Forms
 from .forms import UserRegistrationForm
 from django.contrib.auth import login
 from django.views.generic import FormView
@@ -170,6 +170,7 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        ingredientes_ids = self.request.POST.getlist('ingredientes_ids')
         prompt = form.instance.prompt_geracao
         
         api_key = os.environ.get("GEMINI_API_KEY")
@@ -203,7 +204,30 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
             form.instance.is_ai_generated = True
             form.instance.owner = self.request.user
 
-            return super().form_valid(form)
+            # Salva o Model Receita
+            response = super().form_valid(form)
+
+            # 4. Cria os relacionamentos na tabela IngredienteReceita
+            if self.object and ingredientes_ids:
+                objetos_relacionamento = []
+                for ing_id in ingredientes_ids:
+                    try:
+                        ingrediente = Ingrediente.objects.get(id=ing_id)
+                        objetos_relacionamento.append(
+                            IngredienteReceita(
+                                receita=self.object,
+                                ingrediente=ingrediente,
+                                quantidade=0, # Ou algum valor padrão, já que a IA gera o texto
+                                unidade_medida='un' # Ajuste conforme seu model
+                            )
+                        )
+                    except Ingrediente.DoesNotExist:
+                        continue
+                
+                # Salva todos de uma vez (mais performático)
+                IngredienteReceita.objects.bulk_create(objetos_relacionamento)
+
+            return response
 
         except Exception as e:
             form.add_error(None, f"Erro ao gerar receita com IA: {e}")
@@ -211,6 +235,12 @@ class GerarReceitaIAView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Buscamos todos os ingredientes ordenados por categoria para o agrupamento funcionar
+        context['ingredientes_por_categoria'] = Ingrediente.objects.select_related('categoria').all().order_by('categoria__nome', 'nome')
+        return context
 
 
 class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):

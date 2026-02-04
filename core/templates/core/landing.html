@@ -3,7 +3,7 @@
 {% block title %}Luiggis' - Seu Chef IA{% endblock %}
 
 {% block content %}
-<div class="row align-items-center justify-content-center" style="min-height: 70vh;">
+<div class="row align-items-center justify-content-center" style="min-height: 70vh; margin: 0 auto;">
     <div class="col-lg-8 text-center">
         <!-- Hero Section -->
         <div class="mb-5">
@@ -16,8 +16,8 @@
         <!-- Cards de Estatísticas -->
         <div class="row mb-5">
             <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm" style="min-height: 27vh; min-width: 25%;">
+                    <div class="card-body d-flex flex-column justify-content-center">
                         <h5 class="card-title">📦 Ingredientes</h5>
                         <p class="display-5 fw-bold text-primary">{{ total_ingredientes }}</p>
                         <p class="text-muted">Ingredientes cadastrados</p>
@@ -25,8 +25,8 @@
                 </div>
             </div>
             <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm" style="min-height: 27vh; min-width: 25%;">
+                    <div class="card-body d-flex flex-column justify-content-center">
                         <h5 class="card-title">🍳 Receitas</h5>
                         <p class="display-5 fw-bold text-success">{{ total_receitas }}</p>
                         <p class="text-muted">Receitas criadas</p>
@@ -34,8 +34,8 @@
                 </div>
             </div>
             <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm" style="min-height: 27vh; min-width: 25%;">
+                    <div class="card-body d-flex flex-column justify-content-center">
                         <h5 class="card-title">✨ IA Geradas</h5>
                         <p class="display-5 fw-bold text-warning">{{ total_receitas_ia }}</p>
                         <p class="text-muted">Receitas geradas por IA</p>
@@ -46,13 +46,13 @@
 
         <!-- Botões de Ação -->
         <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-            <a href="{% url 'receita_geracao_ia' %}" class="btn btn-success btn-lg">
+            <a href="{% url 'receita_geracao_ia' %}" class="btn btn-success btn-lg d-flex flex-column justify-content-center">
                 ✨ Gerar Nova Receita
             </a>
-            <a href="{% url 'lista_receitas' %}" class="btn btn-outline-primary btn-lg">
-                🍳 Ver Minhas Receitas
+            <a href="{% url 'lista_receitas' %}" class="btn btn-outline-primary btn-lg d-flex flex-column justify-content-center">
+                🍳 Ver Receitas Cadastradas
             </a>
-            <a href="{% url 'lista_ingredientes' %}" class="btn btn-outline-info btn-lg">
+            <a href="{% url 'lista_ingredientes' %}" class="btn btn-outline-info btn-lg d-flex flex-column justify-content-center">
                 📦 Gerenciar Ingredientes
             </a>
         </div>
