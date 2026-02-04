@@ -28,8 +28,9 @@
                         <th>Nome</th>
                         <th>Categoria</th>
                         <th>Caloria (por porção)</th>
-                        <th>Porção Padrão</th>
-                        <th>Ações</th>
+                        {% if user.is_superuser or user.is_staff %}
+                            <th>Ações</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -38,14 +39,13 @@
                         <td>{{ ingrediente.nome }}</td>
                         <td>{{ ingrediente.categoria|default:"Não Definida" }}</td>
                         <td>{{ ingrediente.caloria }}</td>
-                        <td>{{ ingrediente.get_porcao_display }}</td>
-                        <td>
-                            <!-- AUTORIZACAO: Editar/Excluir ingredientes somente para usuários autenticados -->
-                            {% if user.is_authenticated %}
+                        {% if user.is_superuser or user.is_staff %}
+                            <td>
+                            <!-- AUTORIZACAO: Editar/Excluir ingredientes somente para admins/superadmins -->
                                 <a href="{% url 'editar_ingrediente' ingrediente.pk %}" class="btn btn-sm btn-warning">Editar</a>
                                 <a href="{% url 'excluir_ingrediente' ingrediente.pk %}" class="btn btn-sm btn-danger">Excluir</a>
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -77,6 +77,15 @@
                         <span class="page-link">{{ num }}</span>
                     </li>
                     {% elif num > ingredientes.number|add:'-3' and num < ingredientes.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% elif num == ingredientes.paginator.num_pages %}
+                    {% if ingredientes.number|add:'3' < num|add:'-1' %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ num }}">{{ num }}</a>
                     </li>

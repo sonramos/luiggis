@@ -43,15 +43,14 @@ class UserRegistrationFormTests(TestCase):
     def test_registration_missing_required_fields(self):
         """Testa registro com campos obrigatórios faltando."""
         form_data = {
-            'username': 'testuser',
-            'email': '',  # Campo vazio
-            'perfil': '',
+            'username': '',  # Campo vazio obrigatório
+            'email': 'test@example.com',
             'password1': 'SecurePass123!',
             'password2': 'SecurePass123!',
         }
         form = UserRegistrationForm(data=form_data)
         self.assertFalse(form.is_valid())
-        self.assertIn('perfil', form.errors)
+        self.assertIn('username', form.errors)
 
     def test_registration_passwords_not_matching(self):
         """Testa registro com senhas não coincidindo."""
@@ -120,7 +119,6 @@ class RegisterViewTests(PerfilSetupMixin, TestCase):
         form_data = {
             'username': 'newuser',
             'email': 'newuser@example.com',
-            'perfil': self.perfil_usuario.id,
             'password1': 'SecurePass123!',
             'password2': 'SecurePass123!',
         }
@@ -134,7 +132,10 @@ class RegisterViewTests(PerfilSetupMixin, TestCase):
         self.assertTrue(Usuario.objects.filter(username='newuser').exists())
         user = Usuario.objects.get(username='newuser')
         self.assertEqual(user.email, 'newuser@example.com')
-        self.assertEqual(user.perfil.id, self.perfil_usuario.id)
+        # Usuário deve ter um perfil padrão atribuído automaticamente
+        self.assertIsNotNone(user.perfil)
+        # O perfil deve ser um dos perfis existentes (Profissional de saúde ou Usuário)
+        self.assertIn(user.perfil.tipo, ['Profissional de saúde', 'Usuário'])
 
     def test_register_with_invalid_data(self):
         """Testa registro com dados inválidos."""
