@@ -3,24 +3,124 @@
 {% block title %}Cadastro{% endblock %}
 
 {% block content %}
-<div class="card">
-  <div class="card-body">
-    <h3 class="card-title">Criar conta</h3>
-    <form method="post" novalidate>
-      {% csrf_token %}
-      {% for field in form %}
-      <div class="mb-3">
-        <label class="form-label">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-        {% for error in field.errors %}
-        <div class="text-danger">{{ error }}</div>
-        {% endfor %}
-      </div>
-      {% endfor %}
+<style>
+    /* Container principal para centralizar */
+    .register-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Alinha ao topo para formulários longos */
+        padding: 2rem 0;
+        min-height: 80vh;
+    }
 
-      <button type="submit" class="btn btn-success">Cadastrar</button>
-    </form>
-  </div>
+    .card {
+        width: 100%;
+        max-width: 500px; /* Um pouco mais largo que o login */
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border: none;
+    }
+
+    .card-title {
+        text-align: center;
+        color: #2c3e50;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Estilização dos campos do formulário */
+    .mb-3 {
+        margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #444;
+    }
+
+    /* Estiliza inputs, selects e textareas gerados pelo Django */
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 1rem;
+    }
+
+    input:focus {
+        border-color: #28a745;
+        outline: none;
+        box-shadow: 0 0 5px rgba(40, 167, 69, 0.2);
+    }
+
+    /* Texto de ajuda (ex: requisitos de senha) */
+    .form-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    /* Mensagens de erro */
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .btn-success {
+        width: 100%;
+        padding: 12px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-top: 10px;
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="card">
+        <div class="card-body" style="padding: 2.5rem;">
+            <h3 class="card-title">Criar conta</h3>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <div class="text-danger">⚠️ {{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-success">Cadastrar</button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <small>Já tem uma conta? <a href="{% url 'login' %}" style="color: #28a745; text-decoration: none; font-weight: bold;">Faça login</a></small>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

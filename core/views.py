@@ -10,8 +10,9 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from .models import Ingrediente, Categoria, Receita, Usuario, Perfil # Importe os Models
-from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm # Importe os Forms
+from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm, ReceitaForm # Importe os Forms
 from .forms import UserRegistrationForm
 from django.contrib.auth import login
 from django.views.generic import FormView
@@ -52,22 +53,22 @@ class IngredienteListView(ListView):
     template_name = 'core/ingrediente_lista.html'
     context_object_name = 'ingredientes' # Nome que será usado no template
 
-class IngredienteCreateView(CreateView):
-    """ Permite adicionar um novo ingrediente. """
+class IngredienteCreateView(LoginRequiredMixin, CreateView):
+    """ Permite adicionar um novo ingrediente (exige login). """
     model = Ingrediente
     form_class = IngredienteForm
     template_name = 'core/ingrediente_form.html'
     success_url = reverse_lazy('lista_ingredientes') # Redireciona para a lista após o sucesso
 
-class IngredienteUpdateView(UpdateView):
-    """ Permite editar um ingrediente existente. """
+class IngredienteUpdateView(LoginRequiredMixin, UpdateView):
+    """ Permite editar um ingrediente existente (exige login). """
     model = Ingrediente
     form_class = IngredienteForm
     template_name = 'core/ingrediente_form.html'
     success_url = reverse_lazy('lista_ingredientes')
 
-class IngredienteDeleteView(DeleteView):
-    """ Permite excluir um ingrediente. """
+class IngredienteDeleteView(LoginRequiredMixin, DeleteView):
+    """ Permite excluir um ingrediente (exige login). """
     model = Ingrediente
     template_name = 'core/ingrediente_confirmar_delete.html'
     context_object_name = 'ingrediente'
@@ -77,11 +78,31 @@ class IngredienteDeleteView(DeleteView):
 # --- Vistas para Receita ---
 
 class ReceitaListView(ListView):
-    """ Exibe a lista de todas as receitas criadas. """
+    """ Exibe a lista de receitas do usuário logado (minhas receitas). """
     model = Receita
     template_name = 'core/receita_lista.html'
     context_object_name = 'receitas'
-    ordering = ['-id']  # Ordena pela mais recente primeiro
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            return Receita.objects.filter(owner=user).order_by('-id')
+        return Receita.objects.none()  # não exibe receitas para anonimos
+
+
+class OwnerRequiredMixin:
+    """Mixin simples que verifica se o usuário requisitante é o dono do objeto."""
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        user = request.user
+        # Se não há owner, apenas superuser pode administrar
+        if obj.owner is None:
+            if not user.is_superuser:
+                raise PermissionDenied
+        # Se há owner, apenas o owner (ou superuser) pode administrar
+        elif obj.owner != user and not user.is_superuser:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
 
 
 # --- Vistas para Receita ---
@@ -93,7 +114,7 @@ class ReceitaDetailView(DetailView):
     context_object_name = 'receita'
 
 
-class GerarReceitaIAView(CreateView):
+class GerarReceitaIAView(LoginRequiredMixin, CreateView):
     """
     Exibe o formulário de prompt e processa a geração da receita via IA.
     """
@@ -145,7 +166,9 @@ class GerarReceitaIAView(CreateView):
             form.instance.instrucoes = receita_data.get('instrucoes', 'Instruções não geradas.')
             form.instance.tempo_preparo = receita_data.get('tempo_preparo', 20)
             form.instance.is_ai_generated = True
-            
+            # Atribui o owner como o usuário logado
+            form.instance.owner = self.request.user
+
             # Salva o Model Receita
             return super().form_valid(form)
 
@@ -156,6 +179,22 @@ class GerarReceitaIAView(CreateView):
     def get_success_url(self):
         """Redireciona para a página da receita criada para exibir o resultado."""
         return reverse_lazy('detalhes_receita', kwargs={'pk': self.object.pk})
+
+
+class ReceitaUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
+    """Permite que o dono (ou superuser) edite uma receita."""
+    model = Receita
+    form_class = ReceitaForm
+    template_name = 'core/receita_form.html'
+    success_url = reverse_lazy('lista_receitas')
+
+
+class ReceitaDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
+    """Permite que o dono (ou superuser) exclua uma receita."""
+    model = Receita
+    template_name = 'core/receita_confirmar_delete.html'
+    context_object_name = 'receita'
+    success_url = reverse_lazy('lista_receitas')
 
 
 class RegisterView(FormView):

@@ -35,6 +35,10 @@
                         </td>
                         <td>
                             <a href="{% url 'detalhes_receita' receita.pk %}" class="btn btn-sm btn-info">Detalhar</a>
+                            {% if user.is_superuser or user.is_authenticated and receita.owner == user %}
+                                <a href="{% url 'editar_receita' receita.pk %}" class="btn btn-sm btn-primary">Editar</a>
+                                <a href="{% url 'excluir_receita' receita.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

@@ -3,13 +3,65 @@
 {% block title %}Confirmar Exclusão{% endblock %}
 
 {% block content %}
+<style>
+    .confirm-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-align: center;
+        font-family: sans-serif;
+    }
+
+    h2 { color: #333; }
+
+    .btn-group {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.2s;
+    }
+
+    /* Botão de Excluir (Perigo) */
+    .btn-danger {
+        background-color: #d9534f;
+        color: white;
+    }
+
+    /* Botão de Cancelar (Neutro) */
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn:hover {
+        opacity: 0.8;
+    }
+</style>
+
+<div class="confirm-container">
     <h2>🗑️ Excluir Ingrediente</h2>
 
-    <p>Tem certeza que deseja excluir o ingrediente **"{{ ingrediente.nome }}"**?</p>
+    <p>Tem certeza que deseja excluir o ingrediente <strong>"{{ ingrediente.nome }}"</strong>?</p>
     
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn">Sim, Excluir</button>
-        <a href="{% url 'lista_ingredientes' %}" class="btn">Não, Cancelar</a>
+        <div class="btn-group">
+            <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+            <a href="{% url 'lista_ingredientes' %}" class="btn btn-secondary">Não, Cancelar</a>
+        </div>
     </form>
+</div>
 {% endblock %}
