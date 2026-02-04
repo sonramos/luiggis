@@ -226,6 +226,8 @@ class AgendaAlimentar(models.Model):
     # id é criado automaticamente
     is_google_agenda = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     # FK_USUARIO_id -> Relação 1:N com USUARIO (ON DELETE CASCADE)
     usuario = models.ForeignKey(

@@ -74,35 +74,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Carregar restrições quando o modal for aberto
   modal.addEventListener('show.bs.modal', function() {
-    fetch('/api/restricoes-alimentares/?is_active=true')
-      .then(response => response.json())
+    // Limpar container
+    checkboxesContainer.innerHTML = '<p class="text-muted">Carregando restrições...</p>';
+    
+    // Buscar restrições do backend
+    fetch('/api/restricoes/?is_active=true')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro ao buscar restrições: ' + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
         checkboxesContainer.innerHTML = '';
         const results = Array.isArray(data) ? data : data.results || [];
         
+        if (results.length === 0) {
+          checkboxesContainer.innerHTML = '<p class="text-muted">Nenhuma restrição disponível.</p>';
+          return;
+        }
+        
         results.forEach(restricao => {
           const checkbox = document.createElement('div');
-          checkbox.className = 'form-check';
+          checkbox.className = 'form-check mb-2';
           checkbox.innerHTML = `
-            <input class="form-check-input restriction-checkbox" type="checkbox" value="${restricao.id}" id="restricao_${restricao.id}" data-name="${restricao.tipo}">
+            <input class="form-check-input restriction-checkbox" type="checkbox" value="${restricao.id}" id="restricao_${restricao.id}" data-tipo="${restricao.tipo}">
             <label class="form-check-label" for="restricao_${restricao.id}">
-              ${restricao.tipo} ${restricao.descricao ? '- ' + restricao.descricao : ''}
+              <strong>${restricao.tipo}</strong>
+              ${restricao.descricao ? '<br><small class="text-muted">' + restricao.descricao + '</small>' : ''}
             </label>
           `;
           checkboxesContainer.appendChild(checkbox);
         });
 
-        // Marcar restrições já selecionadas
-        const currentRestrictions = Array.from(document.querySelectorAll('[style*="background:#f1f3f5"]'))
-          .map(el => el.textContent.trim().split('\n')[0]);
+        // Marcar restrições já selecionadas do usuário
+        const currentRestrictionBadges = document.querySelectorAll('[style*="background:#f1f3f5"]');
+        const currentRestrictionNames = new Set();
+        
+        currentRestrictionBadges.forEach(badge => {
+          const text = badge.textContent.trim();
+          currentRestrictionNames.add(text);
+        });
         
         document.querySelectorAll('.restriction-checkbox').forEach(checkbox => {
-          if (currentRestrictions.includes(checkbox.dataset.name)) {
+          if (currentRestrictionNames.has(checkbox.dataset.tipo)) {
             checkbox.checked = true;
           }
         });
       })
-      .catch(error => console.error('Erro ao carregar restrições:', error));
+      .catch(error => {
+        console.error('Erro ao carregar restrições:', error);
+        checkboxesContainer.innerHTML = '<div class="alert alert-danger">Erro ao carregar restrições. Tente novamente.</div>';
+      });
   });
 
   // Salvar restrições
@@ -110,21 +133,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedIds = Array.from(document.querySelectorAll('.restriction-checkbox:checked'))
       .map(cb => cb.value);
     
-    fetch(`/api/usuarios/${{{ user.id }}}`, {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch("/api/usuarios/{{ user.id }}/", {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        'X-CSRFToken': csrfToken
       },
       body: JSON.stringify({
-        restricoes: selectedIds
+        restricoes_ids: selectedIds
       })
     })
-    .then(response => response.json())
-    .then(data => {
-      if (response.ok) {
-        location.reload();
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Erro ao salvar: ' + response.status);
       }
+      return response.json();
+    })
+    .then(data => {
+      // Sucesso - recarregar página
+      location.reload();
     })
     .catch(error => {
       console.error('Erro ao salvar restrições:', error);

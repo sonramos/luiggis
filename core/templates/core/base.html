@@ -49,11 +49,20 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_ingredientes' %}">Ingredientes</a>
                     </li>
+                    <!-- AUTORIZACAO: mostra links de login e register quando usuário não está autenticado -->
+                    {% if request.user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_receitas' %}">Receitas</a>
                     </li>
-                    <!-- AUTORIZACAO: mostra links de perfil e logout quando usuário autenticado -->
-                    {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_refeicoes' %}">Minhas Refeições</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_dietas' %}">Dieta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'listar_agendas' %}">Agenda</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'perfil' %}">Olá, {{ request.user.username }}</a>
                     </li>

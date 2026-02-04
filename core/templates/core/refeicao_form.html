@@ -9,7 +9,7 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">
                     {% if form.instance.id %}
-                        ✏️ Editar Refeição #{{ form.instance.id }}
+                        ✏️ Editar - {{ tipo_refeicao_display }} #{{ form.instance.id }}
                     {% else %}
                         🍴 Nova Refeição
                     {% endif %}

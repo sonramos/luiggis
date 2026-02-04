@@ -16,7 +16,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Agenda #{{ agenda.id }}</h5>
                     <p class="card-text">
-                        <strong>Criada em:</strong> {{ agenda.id|date:"d/m/Y" }}<br>
+                        <strong>Criada em:</strong> {{ agenda.created_at|date:"d/m/Y" }}<br>
                         <strong>Status:</strong> 
                         {% if agenda.is_active %}
                             <span class="badge bg-success">Ativa</span>

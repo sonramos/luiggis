@@ -41,6 +41,9 @@ urlpatterns = [
     # Refeições
     path('refeicoes/', views.RefeicaoListView.as_view(), name='listar_refeicoes'),
     path('refeicoes/criar/', views.RefeicaoCreateView.as_view(), name='criar_refeicao'),
+    path('agendas/<int:agenda_pk>/dia/<int:day_num>/refeicao/', views.RefeicaoSelecionarOuCriarView.as_view(), name='selecionar_ou_criar_refeicao'),
+    path('agendas/<int:agenda_pk>/dia/<int:day_num>/refeicao/criar/', views.RefeicaoCreateAgendaDiaView.as_view(), name='criar_refeicao_agenda_dia'),
+    path('agendas/<int:agenda_pk>/dia/<int:day_num>/refeicao/<int:refeicao_pk>/adicionar/', views.RefeicaoAdicionarExistenteView.as_view(), name='adicionar_refeicao_existente'),
     path('refeicoes/<int:pk>/editar/', views.RefeicaoUpdateView.as_view(), name='editar_refeicao'),
     path('refeicoes/<int:pk>/excluir/', views.RefeicaoDeleteView.as_view(), name='excluir_refeicao'),
 

@@ -171,9 +171,18 @@ class RefeicaoForm(forms.ModelForm):
     receitas = forms.ModelMultipleChoiceField(
         queryset=Receita.objects.all(),
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        widget=forms.CheckboxSelectMultiple(),
         label='Receitas'
     )
+    
+    def __init__(self, *args, user=None, **kwargs):
+        """Inicializa o formulário filtrando receitas do usuário."""
+        super().__init__(*args, **kwargs)
+        if user:
+            # Filtrar apenas receitas do usuário logado
+            self.fields['receitas'].queryset = Receita.objects.filter(owner=user)
+        else:
+            self.fields['receitas'].queryset = Receita.objects.none()
     
     class Meta:
         model = Refeicao
