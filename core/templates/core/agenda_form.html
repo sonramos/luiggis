@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% if form.instance.id %}Editar Agenda{% else %}Nova Agenda{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    {% if form.instance.id %}
+                        ✏️ Editar Agenda #{{ form.instance.id }}
+                    {% else %}
+                        📅 Nova Agenda Alimentar
+                    {% endif %}
+                </h2>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Erros encontrados:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_google_agenda }}
+                        <label class="form-check-label" for="{{ form.is_google_agenda.id_for_label }}">
+                            {{ form.is_google_agenda.label }}
+                        </label>
+                        {% if form.is_google_agenda.errors %}
+                            <div class="invalid-feedback d-block">{{ form.is_google_agenda.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted d-block mt-2">
+                            💡 Ao marcar, sua agenda será sincronizada com o Google Calendar (requer autorização).
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                        <a href="{% url 'listar_agendas' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.id %}Atualizar{% else %}Criar{% endif %} Agenda
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

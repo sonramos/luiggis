@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+
+{% block title %}Minhas Listas de Compra{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🛒 Minhas Listas de Compra</h2>
+    <a href="{% url 'criar_lista_compra' %}" class="btn btn-success">➕ Nova Lista</a>
+</div>
+
+{% if listas %}
+    <div class="row">
+        {% for lista in listas %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Lista #{{ lista.id }}</h5>
+                    <p class="card-text">
+                        <strong>Data de Criação:</strong> {{ lista.data_criacao|date:"d/m/Y" }}<br>
+                        <strong>Ingredientes:</strong> {{ lista.ingredientes.all|length }}<br>
+                        <strong>Status:</strong> 
+                        {% if lista.is_active %}
+                            <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                        {% endif %}
+                    </p>
+                    {% if lista.ingredientes.all %}
+                    <div class="mt-2">
+                        <small><strong>Ingredientes:</strong></small>
+                        <div>
+                            {% for ing in lista.ingredientes.all|slice:":3" %}
+                                <span class="badge bg-info">{{ ing.nome }}</span>
+                            {% endfor %}
+                            {% if lista.ingredientes.count > 3 %}
+                                <span class="badge bg-light text-dark">+{{ lista.ingredientes.count|add:"-3" }} mais</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{% url 'imprimir_lista_compra' lista.pk %}" class="btn btn-sm btn-info" target="_blank">🖨️ Imprimir</a>
+                    <a href="{% url 'excluir_lista_compra' lista.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Primeira</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <p>Você ainda não criou nenhuma lista de compra. <a href="{% url 'criar_lista_compra' %}">Clique aqui</a> para criar uma.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

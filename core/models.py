@@ -68,6 +68,26 @@ class Ingrediente(models.Model):
     caloria = models.IntegerField(
         help_text="Calorias por porção (ex: 100g)."
     )
+    
+    porcao_padrao_gramas = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Porção padrão em gramas (ex: 120g de frango)."
+    )
+    
+    porcao_padrao_ml = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Porção padrão em mililitros (ex: 200ml de leite)."
+    )
+    
+    # Relação N:M com RestricaoAlimentar
+    restricoes = models.ManyToManyField(
+        RestricaoAlimentar,
+        blank=True,
+        related_name='ingredientes_restritos',
+        help_text='Restrições alimentares associadas a este ingrediente'
+    )
 
     class Meta:
         verbose_name = "Ingrediente"
@@ -75,6 +95,14 @@ class Ingrediente(models.Model):
 
     def __str__(self):
         return self.nome
+    
+    def get_porcao_display(self):
+        """Retorna a porção padrão em formato legível."""
+        if self.porcao_padrao_gramas:
+            return f"{self.porcao_padrao_gramas}g"
+        elif self.porcao_padrao_ml:
+            return f"{self.porcao_padrao_ml}ml"
+        return "N/A"
 
 class Receita(models.Model):
     """
@@ -489,8 +517,25 @@ class IngredienteListaCompra(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    
+    # Quantidade necessária do ingrediente
+    quantidade_gramas = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Quantidade em gramas"
+    )
+    
+    quantidade_ml = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Quantidade em mililitros"
+    )
 
     class Meta:
         unique_together = ('ingrediente', 'lista_de_compra')
         verbose_name = "Ingrediente em Lista de Compra"
         verbose_name_plural = "Ingredientes em Listas de Compra"
+    
+    def __str__(self):
+        qty = f"{self.quantidade_gramas}g" if self.quantidade_gramas else (f"{self.quantidade_ml}ml" if self.quantidade_ml else "")
+        return f"{self.ingrediente.nome} ({qty})"

@@ -23,6 +23,7 @@
             {% else %}
               <p class="text-muted">Nenhuma restrição registrada.</p>
             {% endif %}
+            <button class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#restrictionModal">➕ Adicionar Restrição</button>
           </div>
 
           <div class="mt-4">
@@ -40,5 +41,97 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para adicionar restrições alimentares -->
+<div class="modal fade" id="restrictionModal" tabindex="-1" aria-labelledby="restrictionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="restrictionModalLabel">Adicionar Restrições Alimentares</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="restrictionForm">
+          {% csrf_token %}
+          <div id="restrictionsCheckboxes" class="form-check">
+            <!-- Será preenchido por JavaScript -->
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="saveRestrictionsBtn">Salvar Restrições</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('restrictionModal');
+  const checkboxesContainer = document.getElementById('restrictionsCheckboxes');
+  const saveBtn = document.getElementById('saveRestrictionsBtn');
+
+  // Carregar restrições quando o modal for aberto
+  modal.addEventListener('show.bs.modal', function() {
+    fetch('/api/restricoes-alimentares/?is_active=true')
+      .then(response => response.json())
+      .then(data => {
+        checkboxesContainer.innerHTML = '';
+        const results = Array.isArray(data) ? data : data.results || [];
+        
+        results.forEach(restricao => {
+          const checkbox = document.createElement('div');
+          checkbox.className = 'form-check';
+          checkbox.innerHTML = `
+            <input class="form-check-input restriction-checkbox" type="checkbox" value="${restricao.id}" id="restricao_${restricao.id}" data-name="${restricao.tipo}">
+            <label class="form-check-label" for="restricao_${restricao.id}">
+              ${restricao.tipo} ${restricao.descricao ? '- ' + restricao.descricao : ''}
+            </label>
+          `;
+          checkboxesContainer.appendChild(checkbox);
+        });
+
+        // Marcar restrições já selecionadas
+        const currentRestrictions = Array.from(document.querySelectorAll('[style*="background:#f1f3f5"]'))
+          .map(el => el.textContent.trim().split('\n')[0]);
+        
+        document.querySelectorAll('.restriction-checkbox').forEach(checkbox => {
+          if (currentRestrictions.includes(checkbox.dataset.name)) {
+            checkbox.checked = true;
+          }
+        });
+      })
+      .catch(error => console.error('Erro ao carregar restrições:', error));
+  });
+
+  // Salvar restrições
+  saveBtn.addEventListener('click', function() {
+    const selectedIds = Array.from(document.querySelectorAll('.restriction-checkbox:checked'))
+      .map(cb => cb.value);
+    
+    fetch(`/api/usuarios/${{{ user.id }}}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        restricoes: selectedIds
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (response.ok) {
+        location.reload();
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao salvar restrições:', error);
+      alert('Erro ao salvar restrições. Tente novamente.');
+    });
+  });
+});
+</script>
 
 {% endblock %}

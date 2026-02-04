@@ -11,8 +11,8 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from .models import Ingrediente, Categoria, Receita, Usuario, Perfil, IngredienteReceita # Importe os Models
-from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm, ReceitaForm # Importe os Forms
+from .models import Ingrediente, Categoria, Receita, Usuario, Perfil, IngredienteReceita, Dieta, Refeicao, AgendaAlimentar, ListaDeCompra, IngredienteListaCompra # Importe os Models
+from .forms import IngredienteForm, ReceitaIAForm, PerfilUsuarioForm, ReceitaForm, DietaForm, RefeicaoForm, AgendaAlimentarForm, ListaDeCompraForm, IngredienteListaCompraForm # Importe os Forms
 from .forms import UserRegistrationForm
 from django.contrib.auth import login
 from django.views.generic import FormView
@@ -315,3 +315,339 @@ def logout_view(request):
     """Faz logout do usuário e redireciona para a landing."""
     logout(request)
     return redirect('landing')
+
+
+# --- Vistas para Dieta ---
+
+class DietaListView(LoginRequiredMixin, ListView):
+    """Lista todas as dietas do usuário logado."""
+    model = Dieta
+    template_name = 'core/dieta_lista.html'
+    context_object_name = 'dietas'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Dieta.objects.filter(usuario=self.request.user).order_by('-id')
+
+
+class DietaCreateView(LoginRequiredMixin, CreateView):
+    """Cria uma nova dieta."""
+    model = Dieta
+    form_class = DietaForm
+    template_name = 'core/dieta_form.html'
+    
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, 'Dieta criada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_dietas')
+
+
+class DietaUpdateView(LoginRequiredMixin, UpdateView):
+    """Edita uma dieta existente."""
+    model = Dieta
+    form_class = DietaForm
+    template_name = 'core/dieta_form.html'
+    
+    def get_queryset(self):
+        return Dieta.objects.filter(usuario=self.request.user)
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Dieta atualizada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_dietas')
+
+
+class DietaDeleteView(LoginRequiredMixin, DeleteView):
+    """Deleta uma dieta."""
+    model = Dieta
+    template_name = 'core/dieta_confirmar_delete.html'
+    
+    def get_queryset(self):
+        return Dieta.objects.filter(usuario=self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Dieta removida com sucesso.')
+        return super().delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_dietas')
+
+
+# --- Vistas para Refeição ---
+
+class RefeicaoListView(LoginRequiredMixin, ListView):
+    """Lista todas as refeições do usuário logado."""
+    model = Refeicao
+    template_name = 'core/refeicao_lista.html'
+    context_object_name = 'refeicoes'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return Refeicao.objects.filter(usuario=self.request.user).order_by('-date', '-id')
+
+
+class RefeicaoCreateView(LoginRequiredMixin, CreateView):
+    """Cria uma nova refeição."""
+    model = Refeicao
+    form_class = RefeicaoForm
+    template_name = 'core/refeicao_form.html'
+    
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, 'Refeição criada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_refeicoes')
+
+
+class RefeicaoUpdateView(LoginRequiredMixin, UpdateView):
+    """Edita uma refeição existente."""
+    model = Refeicao
+    form_class = RefeicaoForm
+    template_name = 'core/refeicao_form.html'
+    
+    def get_queryset(self):
+        return Refeicao.objects.filter(usuario=self.request.user)
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Refeição atualizada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_refeicoes')
+
+
+class RefeicaoDeleteView(LoginRequiredMixin, DeleteView):
+    """Deleta uma refeição."""
+    model = Refeicao
+    template_name = 'core/refeicao_confirmar_delete.html'
+    
+    def get_queryset(self):
+        return Refeicao.objects.filter(usuario=self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Refeição removida com sucesso.')
+        return super().delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_refeicoes')
+
+
+# --- Vistas para Agenda Alimentar ---
+
+class AgendaAlimentarListView(LoginRequiredMixin, ListView):
+    """Lista todas as agendas do usuário logado."""
+    model = AgendaAlimentar
+    template_name = 'core/agenda_lista.html'
+    context_object_name = 'agendas'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return AgendaAlimentar.objects.filter(usuario=self.request.user).order_by('-id')
+
+
+class AgendaAlimentarCreateView(LoginRequiredMixin, CreateView):
+    """Cria uma nova agenda alimentar."""
+    model = AgendaAlimentar
+    form_class = AgendaAlimentarForm
+    template_name = 'core/agenda_form.html'
+    
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, 'Agenda criada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_agendas')
+
+
+class AgendaAlimentarUpdateView(LoginRequiredMixin, UpdateView):
+    """Edita uma agenda existente."""
+    model = AgendaAlimentar
+    form_class = AgendaAlimentarForm
+    template_name = 'core/agenda_form.html'
+    
+    def get_queryset(self):
+        return AgendaAlimentar.objects.filter(usuario=self.request.user)
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Agenda atualizada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_agendas')
+
+
+class AgendaAlimentarDeleteView(LoginRequiredMixin, DeleteView):
+    """Deleta uma agenda."""
+    model = AgendaAlimentar
+    template_name = 'core/agenda_confirmar_delete.html'
+    
+    def get_queryset(self):
+        return AgendaAlimentar.objects.filter(usuario=self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Agenda removida com sucesso.')
+        return super().delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_agendas')
+
+
+class AgendaAlimentarWeeklyView(LoginRequiredMixin, DetailView):
+    """
+    View para gerenciar a agenda semanal de um usuário.
+    Permite adicionar até 6 refeições por dia e copiar o cardápio para outros dias.
+    """
+    model = AgendaAlimentar
+    template_name = 'core/agenda_semanal.html'
+    context_object_name = 'agenda'
+    
+    def get_queryset(self):
+        return AgendaAlimentar.objects.filter(usuario=self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        agenda = self.object
+        
+        # Dias da semana (0=domingo, 6=sábado)
+        DIAS_SEMANA = {
+            0: 'Domingo',
+            1: 'Segunda',
+            2: 'Terça',
+            3: 'Quarta',
+            4: 'Quinta',
+            5: 'Sexta',
+            6: 'Sábado'
+        }
+        
+        context['DIAS_SEMANA'] = DIAS_SEMANA
+        context['receitas'] = Receita.objects.all()
+        
+        # Construir estrutura de refeições por dia
+        from datetime import datetime, timedelta
+        refeicoes_por_dia = {}
+        
+        # Buscar todas as refeições associadas a esta agenda via RefeicaoAgenda
+        from .models import RefeicaoAgenda
+        agenda_refeicoes = RefeicaoAgenda.objects.filter(agenda_alimentar=agenda).select_related('refeicao')
+        
+        for ar in agenda_refeicoes:
+            if ar.refeicao:
+                weekday = ar.refeicao.date.weekday()
+                if weekday not in refeicoes_por_dia:
+                    refeicoes_por_dia[weekday] = []
+                refeicoes_por_dia[weekday].append(ar.refeicao)
+        
+        context['refeicoes_por_dia'] = refeicoes_por_dia
+        
+        return context
+
+
+# --- Vistas para Lista de Compra ---
+
+class ListaDeCompraListView(LoginRequiredMixin, ListView):
+    """Lista todas as listas de compra do usuário logado."""
+    model = ListaDeCompra
+    template_name = 'core/lista_compra_lista.html'
+    context_object_name = 'listas'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return ListaDeCompra.objects.all().order_by('-data_criacao')
+
+
+class ListaDeCompraCreateView(LoginRequiredMixin, CreateView):
+    """Cria uma nova lista de compra."""
+    model = ListaDeCompra
+    form_class = ListaDeCompraForm
+    template_name = 'core/lista_compra_form.html'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.request.method == 'POST':
+            data = kwargs['data'].copy()
+            # Extrair ingredientes selecionados
+            ingredientes_selecionados = self.request.POST.getlist('ingredientes')
+            data['ingredientes'] = ingredientes_selecionados
+            kwargs['data'] = data
+        return kwargs
+    
+    def form_valid(self, form):
+        lista = form.save()
+        
+        # Adicionar ingredientes à lista
+        ingredientes_selecionados = self.request.POST.getlist('ingredientes')
+        for ing_id in ingredientes_selecionados:
+            try:
+                ingrediente = Ingrediente.objects.get(id=ing_id)
+                quantidade_gramas = self.request.POST.get(f'gramas_{ing_id}')
+                quantidade_ml = self.request.POST.get(f'ml_{ing_id}')
+                
+                IngredienteListaCompra.objects.create(
+                    lista_de_compra=lista,
+                    ingrediente=ingrediente,
+                    quantidade_gramas=int(quantidade_gramas) if quantidade_gramas else None,
+                    quantidade_ml=int(quantidade_ml) if quantidade_ml else None,
+                )
+            except (Ingrediente.DoesNotExist, ValueError):
+                continue
+        
+        messages.success(self.request, 'Lista de compra criada com sucesso.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_listas_compra')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['ingredientes'] = Ingrediente.objects.all().order_by('nome')
+        return context
+
+
+class ListaDeCompraDeleteView(LoginRequiredMixin, DeleteView):
+    """Deleta uma lista de compra."""
+    model = ListaDeCompra
+    template_name = 'core/lista_compra_confirmar_delete.html'
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Lista de compra removida com sucesso.')
+        return super().delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        return reverse_lazy('listar_listas_compra')
+
+
+class ListaDeCompraPrintView(LoginRequiredMixin, DetailView):
+    """View para exibir a lista de compra em formato imprimível."""
+    model = ListaDeCompra
+    template_name = 'core/lista_compra_imprimir.html'
+    context_object_name = 'lista'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lista = self.object
+        
+        # Agrupar ingredientes por categoria
+        ingredientes = IngredienteListaCompra.objects.filter(
+            lista_de_compra=lista
+        ).select_related('ingrediente', 'ingrediente__categoria')
+        
+        # Agrupar por categoria
+        por_categoria = {}
+        for ing_lista in ingredientes:
+            categoria = ing_lista.ingrediente.categoria.nome if ing_lista.ingrediente.categoria else 'Sem categoria'
+            if categoria not in por_categoria:
+                por_categoria[categoria] = []
+            por_categoria[categoria].append(ing_lista)
+        
+        context['ingredientes_por_categoria'] = por_categoria
+        context['total_ingredientes'] = ingredientes.count()
+        
+        return context

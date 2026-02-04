@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+
+{% block title %}Minhas Dietas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🥗 Minhas Dietas</h2>
+    <a href="{% url 'criar_dieta' %}" class="btn btn-success">➕ Nova Dieta</a>
+</div>
+
+{% if dietas %}
+    <div class="row">
+        {% for dieta in dietas %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Dieta #{{ dieta.id }}</h5>
+                    <p class="card-text">
+                        <strong>Refeições/dia:</strong> {{ dieta.min_refeicao }} - {{ dieta.max_refeicao }}<br>
+                        <strong>Total de Calorias:</strong> {{ dieta.total_caloria }} kcal<br>
+                        <strong>Status:</strong> 
+                        {% if dieta.is_active %}
+                            <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                        {% endif %}
+                    </p>
+                    {% if dieta.ingredientes_restritos.all %}
+                    <div class="mt-2">
+                        <small><strong>Ingredientes Restritos:</strong></small>
+                        <div>
+                            {% for ing in dieta.ingredientes_restritos.all|slice:":3" %}
+                                <span class="badge bg-warning text-dark">{{ ing.nome }}</span>
+                            {% endfor %}
+                            {% if dieta.ingredientes_restritos.count > 3 %}
+                                <span class="badge bg-light text-dark">+{{ dieta.ingredientes_restritos.count|add:"-3" }} mais</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{% url 'editar_dieta' dieta.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'excluir_dieta' dieta.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">Primeira</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <p>Você ainda não criou nenhuma dieta. <a href="{% url 'criar_dieta' %}">Clique aqui</a> para criar uma.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -28,6 +28,7 @@
                         <th>Nome</th>
                         <th>Categoria</th>
                         <th>Caloria (por porção)</th>
+                        <th>Porção Padrão</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -37,6 +38,7 @@
                         <td>{{ ingrediente.nome }}</td>
                         <td>{{ ingrediente.categoria|default:"Não Definida" }}</td>
                         <td>{{ ingrediente.caloria }}</td>
+                        <td>{{ ingrediente.get_porcao_display }}</td>
                         <td>
                             <!-- AUTORIZACAO: Editar/Excluir ingredientes somente para usuários autenticados -->
                             {% if user.is_authenticated %}

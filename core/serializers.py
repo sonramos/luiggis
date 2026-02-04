@@ -41,10 +41,14 @@ class IngredienteSerializer(serializers.ModelSerializer):
         source='categoria.nome',
         read_only=True
     )
+    porcao_display = serializers.CharField(
+        source='get_porcao_display',
+        read_only=True
+    )
     
     class Meta:
         model = Ingrediente
-        fields = ['id', 'nome', 'categoria', 'categoria_nome', 'caloria']
+        fields = ['id', 'nome', 'categoria', 'categoria_nome', 'caloria', 'porcao_display']
         read_only_fields = ['id']
 
 
@@ -55,10 +59,15 @@ class IngredienteDetailSerializer(serializers.ModelSerializer):
         source='receitas.count',
         read_only=True
     )
+    porcao_display = serializers.CharField(
+        source='get_porcao_display',
+        read_only=True
+    )
+    restricoes = RestricaoAlimentarSerializer(many=True, read_only=True)
     
     class Meta:
         model = Ingrediente
-        fields = ['id', 'nome', 'categoria', 'caloria', 'receitas_count']
+        fields = ['id', 'nome', 'categoria', 'caloria', 'porcao_display', 'receitas_count', 'restricoes']
         read_only_fields = ['id']
 
 
@@ -113,6 +122,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
         read_only=True
     )
     restricoes = RestricaoAlimentarSerializer(many=True, read_only=True)
+    restricoes_ids = serializers.PrimaryKeyRelatedField(
+        queryset=RestricaoAlimentar.objects.all(),
+        many=True,
+        source='restricoes',
+        write_only=True,
+        required=False
+    )
     receitas_count = serializers.IntegerField(
         source='receitas.count',
         read_only=True
@@ -122,7 +138,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'perfil', 'perfil_tipo', 'restricoes', 'receitas_count',
+            'perfil', 'perfil_tipo', 'restricoes', 'restricoes_ids', 'receitas_count',
             'is_active', 'date_joined'
         ]
         read_only_fields = ['id', 'date_joined', 'receitas_count']

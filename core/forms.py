@@ -1,18 +1,32 @@
 # core/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Ingrediente, Receita, Usuario, Perfil, RestricaoAlimentar
+from .models import Ingrediente, Receita, Usuario, Perfil, RestricaoAlimentar, Dieta, Refeicao, AgendaAlimentar, ListaDeCompra, IngredienteListaCompra
 from django.contrib.auth.forms import AuthenticationForm
+
+
+class IngredienteChoiceField(forms.ModelChoiceField):
+    """Campo customizado que exibe a porção padrão do ingrediente."""
+    def label_from_instance(self, obj):
+        porcao = obj.get_porcao_display()
+        return f"{obj.nome} ({porcao})"
 
 class IngredienteForm(forms.ModelForm):
     class Meta:
         model = Ingrediente
         # Defina os campos que o usuário poderá editar
-        fields = ['nome', 'categoria', 'caloria'] 
+        fields = ['nome', 'categoria', 'caloria', 'porcao_padrao_gramas', 'porcao_padrao_ml', 'restricoes'] 
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Banana Prata'}),
-            # O campo categoria usará automaticamente um select box com as Categorias cadastradas
             'caloria': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 90 (por 100g)'}),
+            'porcao_padrao_gramas': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 120'}),
+            'porcao_padrao_ml': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 200'}),
+            'restricoes': forms.CheckboxSelectMultiple(),
+        }
+        labels = {
+            'porcao_padrao_gramas': 'Porção padrão (gramas)',
+            'porcao_padrao_ml': 'Porção padrão (mililitros)',
+            'restricoes': 'Restrições alimentares associadas',
         }
 
 class ReceitaIAForm(forms.ModelForm):
@@ -36,6 +50,12 @@ class ReceitaIAForm(forms.ModelForm):
 
 class ReceitaForm(forms.ModelForm):
     """Form usado para edição manual de uma receita."""
+    ingredientes = forms.ModelMultipleChoiceField(
+        queryset=Ingrediente.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+    )
+    
     class Meta:
         model = Receita
         fields = ['titulo', 'instrucoes', 'tempo_preparo', 'ingredientes']
@@ -43,8 +63,13 @@ class ReceitaForm(forms.ModelForm):
             'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Título da receita'}),
             'instrucoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
             'tempo_preparo': forms.NumberInput(attrs={'class': 'form-control'}),
-            'ingredientes': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customizar o campo de ingredientes para exibir porção
+        self.fields['ingredientes'].queryset = Ingrediente.objects.all()
+        self.fields['ingredientes'].label_from_instance = lambda obj: f"{obj.nome} ({obj.get_porcao_display()})"
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -108,3 +133,107 @@ class PerfilUsuarioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Mantém queryset atualizado
         self.fields['perfil'].queryset = Perfil.objects.all()
+
+
+class DietaForm(forms.ModelForm):
+    """Formulário para criação/edição de Dieta."""
+    ingredientes_restritos = forms.ModelMultipleChoiceField(
+        queryset=Ingrediente.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        label='Ingredientes Restritos'
+    )
+    
+    class Meta:
+        model = Dieta
+        fields = ['min_refeicao', 'max_refeicao', 'total_caloria', 'link', 'ingredientes_restritos']
+        widgets = {
+            'min_refeicao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 3'}),
+            'max_refeicao': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 5'}),
+            'total_caloria': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2000'}),
+            'link': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+        }
+        labels = {
+            'min_refeicao': 'Número mínimo de refeições por dia',
+            'max_refeicao': 'Número máximo de refeições por dia',
+            'total_caloria': 'Total de calorias por dia',
+            'link': 'Link ou referência (opcional)',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customizar o campo de ingredientes para exibir porção
+        self.fields['ingredientes_restritos'].label_from_instance = lambda obj: f"{obj.nome} ({obj.get_porcao_display()})"
+
+
+class RefeicaoForm(forms.ModelForm):
+    """Formulário para criação/edição de Refeição."""
+    receitas = forms.ModelMultipleChoiceField(
+        queryset=Receita.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        label='Receitas'
+    )
+    
+    class Meta:
+        model = Refeicao
+        fields = ['date', 'tipo_refeicao', 'receitas']
+        widgets = {
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'tipo_refeicao': forms.Select(attrs={'class': 'form-select'}),
+        }
+        labels = {
+            'date': 'Data da refeição',
+            'tipo_refeicao': 'Tipo de refeição',
+            'receitas': 'Receitas incluídas',
+        }
+
+
+class AgendaAlimentarForm(forms.ModelForm):
+    """Formulário para criação/edição de Agenda Alimentar."""
+    class Meta:
+        model = AgendaAlimentar
+        fields = ['is_google_agenda']
+        widgets = {
+            'is_google_agenda': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'is_google_agenda': 'Sincronizar com Google Calendar (experimental)',
+        }
+
+
+class ListaDeCompraForm(forms.ModelForm):
+    """Formulário para criação de Lista de Compra."""
+    ingredientes = forms.ModelMultipleChoiceField(
+        queryset=Ingrediente.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+        label='Ingredientes'
+    )
+    
+    class Meta:
+        model = ListaDeCompra
+        fields = ['is_active']
+        widgets = {
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'is_active': 'Lista ativa',
+        }
+
+
+class IngredienteListaCompraForm(forms.ModelForm):
+    """Formulário para adicionar ingredientes com quantidade em uma lista de compra."""
+    class Meta:
+        model = IngredienteListaCompra
+        fields = ['ingrediente', 'quantidade_gramas', 'quantidade_ml']
+        widgets = {
+            'ingrediente': forms.Select(attrs={'class': 'form-select'}),
+            'quantidade_gramas': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 200'}),
+            'quantidade_ml': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 500'}),
+        }
+        labels = {
+            'ingrediente': 'Ingrediente',
+            'quantidade_gramas': 'Quantidade (gramas)',
+            'quantidade_ml': 'Quantidade (mililitros)',
+        }

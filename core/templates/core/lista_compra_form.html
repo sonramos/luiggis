@@ -1,0 +1,85 @@
+{% extends "core/base.html" %}
+
+{% block title %}Criar Nova Lista de Compra{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-4">🛒 Nova Lista de Compra</h2>
+
+                <form method="post" id="listaForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Erros encontrados:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            {{ form.is_active.label }}
+                        </label>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Selecione os Ingredientes</h5>
+                    <div class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
+                        {% for ingrediente in ingredientes %}
+                        <div class="card mb-2">
+                            <div class="card-body py-2">
+                                <div class="form-check">
+                                    <input class="form-check-input ingrediente-check" type="checkbox" name="ingredientes" value="{{ ingrediente.id }}" id="ing_{{ ingrediente.id }}" data-nome="{{ ingrediente.nome }}">
+                                    <label class="form-check-label" for="ing_{{ ingrediente.id }}">
+                                        <strong>{{ ingrediente.nome }}</strong>
+                                        <span class="badge bg-secondary">{{ ingrediente.get_porcao_display }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ ingrediente.categoria.nome|default:"Sem categoria" }} • {{ ingrediente.caloria }} kcal</small>
+                                    </label>
+                                </div>
+                                <div class="row mt-2" id="qty_{{ ingrediente.id }}" style="display: none;">
+                                    <div class="col-md-6">
+                                        <label class="form-label form-label-sm">Quantidade (gramas)</label>
+                                        <input type="number" class="form-control form-control-sm" name="gramas_{{ ingrediente.id }}" placeholder="Ex: 200">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label form-label-sm">Quantidade (ml)</label>
+                                        <input type="number" class="form-control form-control-sm" name="ml_{{ ingrediente.id }}" placeholder="Ex: 500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mt-4">
+                        <a href="{% url 'listar_listas_compra' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Criar Lista de Compra</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar campos de quantidade quando checkbox é marcado
+document.querySelectorAll('.ingrediente-check').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const qtyDiv = document.getElementById(`qty_${this.value}`);
+        if (this.checked) {
+            qtyDiv.style.display = 'flex';
+        } else {
+            qtyDiv.style.display = 'none';
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compra #{{ lista.id }}</title>
+    <style>
+        @media print {
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .categoria {
+            margin-bottom: 25px;
+        }
+        
+        .categoria-title {
+            background-color: #f0f0f0;
+            padding: 8px 10px;
+            font-weight: bold;
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .ingrediente {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-bottom: 1px dotted #ddd;
+            font-size: 14px;
+        }
+        
+        .ingrediente-nome {
+            flex: 1;
+        }
+        
+        .ingrediente-quantidade {
+            text-align: right;
+            font-weight: bold;
+            color: #007bff;
+            min-width: 120px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #333;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Lista de Compra</h1>
+            <p>Lista #{{ lista.id }}</p>
+        </div>
+        
+        <div class="info">
+            <div>
+                <strong>Data:</strong> {{ lista.data_criacao|date:"d/m/Y" }}
+            </div>
+            <div>
+                <strong>Total de Ingredientes:</strong> {{ total_ingredientes }}
+            </div>
+        </div>
+        
+        {% for categoria, ingredientes in ingredientes_por_categoria.items %}
+        <div class="categoria">
+            <div class="categoria-title">{{ categoria }}</div>
+            {% for ing_lista in ingredientes %}
+            <div class="ingrediente">
+                <span class="ingrediente-nome">□ {{ ing_lista.ingrediente.nome }}</span>
+                <span class="ingrediente-quantidade">
+                    {% if ing_lista.quantidade_gramas %}
+                        {{ ing_lista.quantidade_gramas }}g
+                    {% elif ing_lista.quantidade_ml %}
+                        {{ ing_lista.quantidade_ml }}ml
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        
+        <div class="footer">
+            <p>Gerado em {{ "now"|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+    
+    <div class="buttons no-print">
+        <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-secondary" onclick="window.history.back()">← Voltar</button>
+    </div>
+</body>
+</html>
