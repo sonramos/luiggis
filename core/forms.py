@@ -150,7 +150,7 @@ class DietaForm(forms.ModelForm):
         
         if user:
             # Obter restrições do perfil do usuário
-            restricoes_perfil = user.perfil.restricoes.filter(is_active=True)
+            restricoes_perfil = user.restricoes.filter(is_active=True)
             
             # Pré-preencher as restrições do perfil
             if restricoes_perfil.exists():
